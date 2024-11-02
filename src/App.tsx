@@ -2,6 +2,8 @@ import { MouseEvent, useEffect, useRef } from "react";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const pointsRef = useRef<Array<{ x: number; y: number }>>([]);
   const mouseRef = useRef({
     x: 0,
     y: 0,
@@ -24,6 +26,7 @@ function App() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.scale(ratio, ratio);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.imageSmoothingEnabled = true;
@@ -41,6 +44,13 @@ function App() {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
+
+    if (mouseRef.current.draw)
+      pointsRef.current = [
+        ...pointsRef.current,
+        { x: e.clientX - rect.left, y: e.clientY - rect.top },
+      ];
+
     mouseRef.current = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
@@ -54,32 +64,51 @@ function App() {
 
   const onMouseUp = () => {
     mouseRef.current.draw = false;
+    pointsRef.current = [];
   };
 
   useEffect(() => {
     let loopId: number;
+
     const loop = () => {
       loopId = requestAnimationFrame(loop);
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d");
+
       if (!canvas || !ctx) return;
+      const offScreenCanvas = new OffscreenCanvas(canvas.height, canvas.width);
+      const offScreenCtx = offScreenCanvas.getContext("2d");
+      if (!offScreenCtx) return null;
 
-      canvas.style.cursor = "default";
+      offScreenCtx.beginPath(); // begin
 
-      const mouse = mouseRef.current;
-      if (!mouse.draw) return;
+      offScreenCtx.lineWidth = 5;
+      offScreenCtx.lineCap = "round";
+      offScreenCtx.strokeStyle = "#c0392b";
 
-      canvas.style.cursor = "crosshair";
-      ctx.beginPath(); // begin
+      offScreenCtx.beginPath();
+      for (let i = 0; i < pointsRef.current.length; i++) {
+        const point = pointsRef.current[i];
+        if (i === pointsRef.current.length - 1) {
+          ctx.lineTo(point.x, point.y);
+          break;
+        }
 
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = "#c0392b";
+        const pointNext = pointsRef.current[i + 1];
+        const midX = (point.x + pointNext.x) / 2;
+        const midY = (point.y + pointNext.y) / 2;
 
-      ctx.moveTo(mouse.oldX, mouse.oldY); // from
-      ctx.lineTo(mouse.x, mouse.y);
+        if (i === 0) {
+          offScreenCtx.moveTo(point.x, point.y);
+          offScreenCtx.lineTo(midX, midY);
+        } else {
+          offScreenCtx.quadraticCurveTo(point.x, point.y, midX, midY);
+        }
+      }
 
-      ctx.stroke();
+      offScreenCtx.stroke();
+      // ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(offScreenCanvas, 0, 0);
     };
 
     setup();
