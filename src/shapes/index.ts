@@ -1,12 +1,13 @@
-import { Shape } from "./Shape";
+export { Shape } from "./Shape";
 
 import { Oval } from "./Oval";
 import { Pen } from "./Pen";
+import { Pointer } from "./Pointer";
 import { Rectangle } from "./Rectangle";
 
-export { Oval, Pen, Rectangle, Shape };
 export const Tools = {
-  [Oval.name]: Oval,
+  [Pointer.name]: Pointer,
   [Pen.name]: Pen,
   [Rectangle.name]: Rectangle,
+  [Oval.name]: Oval,
 };

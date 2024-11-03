@@ -7,7 +7,8 @@ import {
   useState,
 } from "react";
 
-import * as Shapes from "./shapes";
+import * as Shapes from "../shapes";
+import { cn } from "../utils/cn";
 
 function App() {
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,9 +17,8 @@ function App() {
   const shapesRef = useRef<Shapes.Shape[]>([]);
   const currentShapeRef = useRef<Shapes.Shape | null>(null);
 
-  const [selectedShape, setSelectedShape] = useState<keyof typeof Shapes.Tools>(
-    Shapes.Pen.name,
-  );
+  const [selectedShape, setSelectedShape] =
+    useState<keyof typeof Shapes.Tools>("Pointer");
 
   const setup = (canvasRef: RefObject<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -41,7 +41,7 @@ function App() {
 
   const draw = (
     canvasRef: RefObject<HTMLCanvasElement>,
-    paint: (ctx: OffscreenCanvasRenderingContext2D) => void,
+    paint: (ctx: OffscreenCanvasRenderingContext2D) => void
   ) => {
     const canvas = canvasRef.current;
     const canvasCtx = canvas?.getContext("2d");
@@ -66,6 +66,8 @@ function App() {
   }, []);
 
   const onMouseDown = () => {
+    if (!selectedShape) return;
+
     const shape = Shapes.Tools[selectedShape];
     currentShapeRef.current = new shape();
 
@@ -89,16 +91,20 @@ function App() {
 
   const onMouseUp = () => {
     if (!currentShapeRef.current) return;
-
-    shapesRef.current = [...shapesRef.current, currentShapeRef.current];
-    realDraw();
+    if (!currentShapeRef.current.drawingOnly) {
+      shapesRef.current = [...shapesRef.current, currentShapeRef.current];
+    }
 
     currentShapeRef.current = null;
+    realDraw();
 
     const canvas = drawingCanvasRef.current;
     if (!canvas) return;
 
-    canvas.style.cursor = Shapes.Shape.pointer;
+    canvas.style.cursor = Shapes.Shape.cursor;
+
+    const canvasCtx = canvas.getContext("2d");
+    canvasCtx?.clearRect(0, 0, canvas.width, canvas.height);
   };
 
   useEffect(() => {
@@ -127,56 +133,45 @@ function App() {
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          gap: 5,
-          position: "fixed",
-          top: 50,
-          left: 50,
-          zIndex: 20,
-          backgroundColor: "white",
-          padding: 10,
-          borderRadius: 10,
-        }}
-      >
-        {Object.keys(Shapes.Tools).map((tool) => (
-          <div onClick={() => setSelectedShape(tool)}>
-            {Shapes.Tools[tool].name}
-          </div>
-        ))}
+      <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen">
+        <div className="flex items-center gap-2 border-gray-100 bg-white shadow-lg p-1 border rounded-xl text-sm">
+          {Object.keys(Shapes.Tools).map((tool) => {
+            const shape = Shapes.Tools[tool];
+            if (!shape) return;
+
+            const { icon: Icon } = shape;
+            const isSelected = selectedShape === tool;
+
+            return (
+              <div
+                onClick={() => setSelectedShape(tool)}
+                key={tool}
+                className={cn(
+                  "p-2 cursor-pointer",
+                  isSelected && "bg-blue-100 rounded-lg"
+                )}
+                title={shape.name}
+              >
+                <Icon
+                  size={16}
+                  strokeWidth={1.5}
+                  fill={isSelected ? "#000" : "#FFF"}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
       <canvas
         ref={drawingCanvasRef}
-        style={{
-          height: "100vh",
-          width: "100vw",
-          margin: 0,
-          padding: 0,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          zIndex: 10,
-        }}
+        className="top-0 left-0 z-10 fixed m-0 p-0 w-screen h-screen"
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
       />
-
       <canvas
         ref={realCanvasRef}
-        style={{
-          height: "100vh",
-          width: "100vw",
-          margin: 0,
-          padding: 0,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          zIndex: 0,
-
-          backgroundColor: "#EEE",
-        }}
+        className="top-0 left-0 z-0 fixed bg-gray-50 m-0 p-0 w-screen h-screen"
       />
     </div>
   );

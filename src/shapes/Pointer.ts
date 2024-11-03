@@ -1,14 +1,15 @@
 import { MouseEvent } from "react";
-import { Circle } from 'lucide-react'
+import { MousePointer2 } from 'lucide-react'
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
 import { Point } from "../types";
 
-export class Oval extends Shape {
-  static name: string = "Oval";
-  static icon = Circle;
-  static pointer: string = "crosshair";
+export class Pointer extends Shape {
+  static name: string = "Pointer";
+  static icon = MousePointer2;
+  static pointer: string = "cursor";
+  drawingOnly = true;
 
   start: Point | null;
   end: Point | null;
@@ -34,16 +35,13 @@ export class Oval extends Shape {
     ctx.beginPath();
     ctx.lineWidth = 5;
     ctx.lineCap = "round";
-    ctx.strokeStyle = "#0000ff";
+    ctx.strokeStyle = "#00ff00";
 
-    ctx.ellipse(
-      (this.end.x + this.start.x) / 2,
-      (this.end.y + this.start.y) / 2,
-      Math.abs(this.end.x - this.start.x) / 2,
-      Math.abs(this.end.y - this.start.y) / 2,
-      0,
-      0,
-      2 * Math.PI,
+    ctx.rect(
+      this.start.x,
+      this.start.y,
+      this.end.x - this.start.x,
+      this.end.y - this.start.y,
     );
     ctx.stroke();
   }

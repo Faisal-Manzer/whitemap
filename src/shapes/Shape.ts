@@ -1,11 +1,15 @@
 import { MouseEvent } from "react";
+import { Shapes } from 'lucide-react'
+
 import { $ID } from "../utils/helpers";
 
 export class Shape {
   id: string;
   isSelected = false;
   static name: string = "Shape";
-  static pointer: string = "default";
+  static icon = Shapes;
+  static cursor: string = "default";
+  drawingOnly = false;
 
   constructor() {
     this.id = $ID();

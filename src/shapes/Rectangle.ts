@@ -1,4 +1,5 @@
 import { MouseEvent } from "react";
+import { Square } from 'lucide-react'
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
@@ -6,6 +7,7 @@ import { Point } from "../types";
 
 export class Rectangle extends Shape {
   static name: string = "Rectangle";
+  static icon = Square;
   static pointer: string = "crosshair";
 
   start: Point | null;
