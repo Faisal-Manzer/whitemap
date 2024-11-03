@@ -16,3 +16,10 @@ export interface ShapeConfiguration {
 
   background: string;
 }
+
+export interface BondedRectangle {
+  topLeft: Point;
+  // topRight: Point;
+  // bottomLeft: Point;
+  bottomRight: Point;
+}

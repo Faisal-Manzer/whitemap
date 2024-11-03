@@ -17,7 +17,7 @@ export const ElementSelector: FC<ElementSelectorProps> = ({
   <div
     className={cn(
       "p-0.5 border-2 rounded-lg border-white",
-      isSelected && selectedClass
+      isSelected && selectedClass,
     )}
   >
     <div

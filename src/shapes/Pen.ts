@@ -49,7 +49,7 @@ export class Pen extends Shape {
   }
 
   translate(dX: number, dY: number): void {
-    this.points = this.points.map((p) => ({ x: p.x + dX, y: p.y + dY}));
+    this.points = this.points.map((p) => ({ x: p.x + dX, y: p.y + dY }));
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>): boolean {

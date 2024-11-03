@@ -2,7 +2,11 @@ import { MouseEvent } from "react";
 import { Shapes } from "lucide-react";
 
 import { $ID } from "../utils/helpers";
-import { ShapeConfiguration, ShapePanelConfiguration } from "../types";
+import {
+  BondedRectangle,
+  ShapeConfiguration,
+  ShapePanelConfiguration,
+} from "../types";
 
 export class Shape {
   id: string;
@@ -27,6 +31,11 @@ export class Shape {
   move(e: MouseEvent<HTMLCanvasElement>): void {
     console.log("[Shape:move] Not Implemented", e);
     throw new Error("[Shape:move] Not Implemented");
+  }
+
+  boundedRectangle(): BondedRectangle | null {
+    console.log("[Shape:boundedRectangle] Not Implemented");
+    return null;
   }
 
   draw(ctx: OffscreenCanvasRenderingContext2D) {

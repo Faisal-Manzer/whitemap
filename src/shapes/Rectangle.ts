@@ -3,7 +3,7 @@ import { Square } from "lucide-react";
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
-import { Point, ShapeConfiguration } from "../types";
+import { BondedRectangle, Point, ShapeConfiguration } from "../types";
 
 export class Rectangle extends Shape {
   static name: string = "Rectangle";
@@ -28,6 +28,18 @@ export class Rectangle extends Shape {
     }
   }
 
+  boundedRectangle(): BondedRectangle | null {
+    if (!this.start || !this.end) return null;
+
+    console.log("[Shape:boundedRectangle] Not Implemented");
+    return {
+      topLeft: this.start,
+      bottomRight: this.end,
+      // topRight: { x: this.start.x, y: this.end.y },
+      // bottomLeft: { x: this.end.x, y: this.start.y },
+    };
+  }
+
   draw(ctx: OffscreenCanvasRenderingContext2D): void {
     if (!this.start || !this.end) return;
 
@@ -46,7 +58,7 @@ export class Rectangle extends Shape {
   translate(dX: number, dY: number): void {
     if (this.start) {
       this.start.x += dX;
-      this.start.y += dY
+      this.start.y += dY;
     }
 
     if (this.end) {

@@ -1,31 +1,17 @@
 import { MouseEvent } from "react";
 import { Circle } from "lucide-react";
 
-import { Shape } from "./Shape";
-import { $xy } from "../utils/coordinate";
-import { Point, ShapeConfiguration } from "../types";
+import { Rectangle } from "./Rectangle";
 
-export class Oval extends Shape {
+import { ShapeConfiguration } from "../types";
+
+export class Oval extends Rectangle {
   static name: string = "Oval";
   static icon = Circle;
   static pointer: string = "crosshair";
 
-  start: Point | null;
-  end: Point | null;
-
   constructor(config: ShapeConfiguration) {
     super(config);
-
-    this.start = null;
-    this.end = null;
-  }
-
-  move(e: MouseEvent<HTMLCanvasElement>): void {
-    if (this.start === null) {
-      this.start = $xy(e);
-    } else {
-      this.end = $xy(e);
-    }
   }
 
   draw(ctx: OffscreenCanvasRenderingContext2D): void {
@@ -44,18 +30,6 @@ export class Oval extends Shape {
 
     ctx.fill();
     ctx.stroke();
-  }
-
-  translate(dX: number, dY: number): void {
-    if (this.start) {
-      this.start.x += dX;
-      this.start.y += dY
-    }
-
-    if (this.end) {
-      this.end.x += dX;
-      this.end.y += dY;
-    }
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>): boolean {

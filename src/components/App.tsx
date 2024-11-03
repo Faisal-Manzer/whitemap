@@ -1,6 +1,6 @@
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import { Pointer, Pen, Shape, Tools } from "../shapes";
+import { Pen, Pointer, Shape, Tools } from "../shapes";
 import { cn } from "../utils/cn";
 import { ShapePanel, ShapePanelRef } from "./panels/ShapePanel";
 import { $box } from "../utils/coordinate";
@@ -154,7 +154,6 @@ function App() {
 
   return (
     <div>
-      <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen"></div>
       <ShapePanel
         ref={panelRef}
         shape={

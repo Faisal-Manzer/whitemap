@@ -95,5 +95,5 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         )}
       </div>
     );
-  }
+  },
 );
