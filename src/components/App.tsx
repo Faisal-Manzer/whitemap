@@ -1,97 +1,80 @@
-import {
-  MouseEvent,
-  RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import { Shape, Tools, Pointer } from "../shapes";
+import { Pointer, Shape, Tools } from "../shapes";
 import { cn } from "../utils/cn";
 import { ShapePanel, ShapePanelRef } from "./panels/ShapePanel";
 import { $box } from "../utils/coordinate";
+import { draw, setup } from "../utils/drawing";
 
 function App() {
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const realCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const mouseRef = useRef<MouseEvent<HTMLCanvasElement> | null>(null);
+  const prevMouseRef = useRef<MouseEvent<HTMLCanvasElement> | null>(null);
 
   const shapesRef = useRef<Shape[]>([]);
   const currentShapeRef = useRef<Shape | null>(null);
-  const [selectedShape, setSelectedShape] = useState<keyof typeof Tools>(
+
+  const [activeTool, setActiveTool] = useState<keyof typeof Tools>(
     Pointer.name
   );
 
   const panelRef = useRef<ShapePanelRef>(null);
-
-  const setup = (canvasRef: RefObject<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ratio = Math.ceil(window.devicePixelRatio);
-    canvas.width = window.innerWidth * ratio;
-    canvas.height = window.innerHeight * ratio;
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.scale(ratio, ratio);
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-  };
-
-  const draw = (
-    canvasRef: RefObject<HTMLCanvasElement>,
-    paint: (ctx: OffscreenCanvasRenderingContext2D) => void
-  ) => {
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas?.getContext("2d");
-    if (!canvas || !canvasCtx) return;
-
-    const offScreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
-    const offScreenCanvasCtx = offScreenCanvas.getContext("2d");
-
-    if (!offScreenCanvasCtx) return;
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-    paint(offScreenCanvasCtx);
-    canvasCtx.drawImage(offScreenCanvas, 0, 0);
-  };
+  const isPointerActive = activeTool === Pointer.name;
 
   const realDraw = useCallback(() => {
     draw(realCanvasRef, (ctx) => {
       for (const shape of shapesRef.current) {
-        if (!shape.isSelected) shape.draw(ctx);
+        shape.draw(ctx);
       }
     });
   }, []);
 
-  const onMouseDown = () => {
+  const initShape = () => {
     const panel = panelRef.current;
     if (!panel) return;
-    if (currentShapeRef.current?.isSelected) return;
 
-    const shape = Tools[selectedShape];
+    const shape = Tools[activeTool];
     currentShapeRef.current = new shape(panel.getConfig());
   };
 
+  const getHoveredElements = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+    const canvas = drawingCanvasRef.current;
+    if (!canvas) return [];
+
+    return shapesRef.current.filter((shape) =>
+      shape.isHovered($box(canvas, e))
+    );
+  }, []);
+
+  const onMouseDown = (e: MouseEvent<HTMLCanvasElement>) => {
+    if (isPointerActive) {
+      const hoveredElements = getHoveredElements(e);
+      if (hoveredElements.length > 0) {
+        currentShapeRef.current = hoveredElements[hoveredElements.length - 1];
+        shapesRef.current = shapesRef.current.filter(
+          (s) => s.id !== currentShapeRef.current?.id
+        );
+
+        return;
+      } else {
+        initShape();
+      }
+    } else initShape();
+  };
+
   const onMouseMove = (e: MouseEvent<HTMLCanvasElement>) => {
+    prevMouseRef.current = mouseRef.current;
     mouseRef.current = e;
   };
 
   const onMouseUp = () => {
-    console.log("[onMouseUp]");
+    const currentShape = currentShapeRef.current;
+    if (!currentShape) return;
 
-    if (!currentShapeRef.current) return;
-    if (currentShapeRef.current.isSelected) return;
-
-    if (!currentShapeRef.current.drawingOnly) {
-      shapesRef.current = [...shapesRef.current, currentShapeRef.current];
+    if (!currentShape.drawingOnly) {
+      shapesRef.current = [...shapesRef.current, currentShape];
     }
 
     currentShapeRef.current = null;
@@ -105,64 +88,54 @@ function App() {
     canvasCtx?.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  const resetSelected = useCallback(() => {
-    if (currentShapeRef.current?.isSelected) {
-      currentShapeRef.current.isSelected = false;
-      shapesRef.current = [...shapesRef.current, currentShapeRef.current];
-
-      currentShapeRef.current = null;
-      realDraw();
-    }
-  }, [realDraw]);
-
-  const onClick = (e: MouseEvent<HTMLCanvasElement>) => {
-    resetSelected();
-
-    if (selectedShape !== Pointer.name) return;
-    const canvas = drawingCanvasRef.current;
-    if (!canvas) return;
-
-    const clickedElements = shapesRef.current.filter((shape) =>
-      shape.isHovered($box(canvas, e))
-    );
-
-    if (clickedElements.length > 0) {
-      currentShapeRef.current = clickedElements[clickedElements.length - 1];
-      currentShapeRef.current.isSelected = true;
-      shapesRef.current = shapesRef.current.filter(
-        (s) => s.id !== currentShapeRef.current?.id
-      );
-
-      realDraw();
-    }
-  };
-
   const updateCursorStyle = useCallback(() => {
     const e = mouseRef.current;
     const canvas = drawingCanvasRef.current;
 
     if (!e || !canvas) return;
+    if (isPointerActive) {
+      if (currentShapeRef.current) {
+        canvas.style.cursor = "move";
+        return;
+      }
+
+      const hoveredElements = getHoveredElements(e);
+      if (hoveredElements.length > 0) canvas.style.cursor = "move";
+      else canvas.style.cursor = "default";
+
+      return;
+    }
 
     if (currentShapeRef.current) {
-      if (currentShapeRef.current.isSelected) return;
-
-      currentShapeRef.current.move($box(canvas, e));
-      canvas.style.cursor = Tools[selectedShape].cursor;
-    } else if (selectedShape === Pointer.name) {
-      const hoveredElement = shapesRef.current.filter((shape) =>
-        shape.isHovered(mouseRef.current!)
-      );
-      if (hoveredElement.length > 0) canvas.style.cursor = "move";
-      else canvas.style.cursor = "default";
+      canvas.style.cursor = Tools[activeTool].cursor;
     } else {
       canvas.style.cursor = "default";
     }
-  }, [selectedShape]);
+  }, [activeTool, isPointerActive, getHoveredElements]);
 
   useEffect(() => {
     let loopId: number;
     const loop = () => {
       loopId = requestAnimationFrame(loop);
+
+      if (currentShapeRef.current) {
+        if (mouseRef.current) {
+          if (
+            isPointerActive &&
+            currentShapeRef.current?.constructor.name !== Pointer.name
+          ) {
+            if (prevMouseRef.current) {
+              const dX =
+                mouseRef.current.clientX - prevMouseRef.current.clientX;
+              const dY =
+                mouseRef.current.clientY - prevMouseRef.current.clientY;
+              currentShapeRef.current?.translate(dX, dY);
+            }
+          } else currentShapeRef.current?.move(mouseRef.current);
+        }
+
+        prevMouseRef.current = null;
+      }
 
       draw(drawingCanvasRef, (ctx) => {
         currentShapeRef.current?.draw(ctx);
@@ -179,26 +152,20 @@ function App() {
     return () => {
       cancelAnimationFrame(loopId);
     };
-  }, [realDraw, updateCursorStyle]);
-
-  useEffect(() => {
-    if (currentShapeRef.current?.isSelected) {
-      resetSelected();
-    }
-  }, [selectedShape, resetSelected]);
+  }, [realDraw, updateCursorStyle, isPointerActive]);
 
   return (
     <div>
       <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen">
         <div className="flex items-center gap-2 border-gray-100 bg-white shadow-lg p-1 border rounded-xl text-sm">
           {Object.keys(Tools).map((tool) => {
-            const isSelected = selectedShape === tool;
+            const isSelected = tool === activeTool;
             const shape = Tools[tool];
             const { icon: Icon } = shape;
 
             return (
               <div
-                onClick={() => setSelectedShape(tool)}
+                onClick={() => setActiveTool(tool)}
                 key={tool}
                 className={cn(
                   "p-2 cursor-pointer",
@@ -218,8 +185,14 @@ function App() {
       </div>
       <ShapePanel
         ref={panelRef}
-        shape={Tools[selectedShape]}
-        key={selectedShape + "-" + (currentShapeRef.current?.id || "none")}
+        shape={
+          activeTool === Pointer.name
+            ? currentShapeRef.current?.constructor
+              ? Tools[currentShapeRef.current?.constructor.name]
+              : Pointer
+            : Tools[activeTool]
+        }
+        key={activeTool + "-" + (currentShapeRef.current?.id || "none")}
       />
       <canvas
         ref={drawingCanvasRef}
@@ -227,7 +200,6 @@ function App() {
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
-        onClick={onClick}
       />
       <canvas
         ref={realCanvasRef}

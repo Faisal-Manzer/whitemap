@@ -5,7 +5,10 @@ export const $xy = (e: MouseEvent<HTMLCanvasElement>) => ({
   y: e.clientY,
 });
 
-export const $box = (canvas: HTMLCanvasElement, e: MouseEvent<HTMLCanvasElement>) => {
+export const $box = (
+  canvas: HTMLCanvasElement,
+  e: MouseEvent<HTMLCanvasElement>,
+) => {
   const rect = canvas.getBoundingClientRect();
   return {
     ...e,

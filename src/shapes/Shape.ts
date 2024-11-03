@@ -1,19 +1,23 @@
 import { MouseEvent } from "react";
-import { Shapes } from 'lucide-react'
+import { Shapes } from "lucide-react";
 
 import { $ID } from "../utils/helpers";
 import { ShapeConfiguration, ShapePanelConfiguration } from "../types";
 
 export class Shape {
   id: string;
-  isSelected = false;
   drawingOnly = false;
   config: ShapeConfiguration;
 
   static name: string = "Shape";
   static icon = Shapes;
   static cursor: string = "default";
-  static panel: ShapePanelConfiguration = { noPanel: false, background: true, border: true, borderWidth: 3 };
+  static panel: ShapePanelConfiguration = {
+    noPanel: false,
+    background: true,
+    border: true,
+    borderWidth: 3,
+  };
 
   constructor(config: ShapeConfiguration) {
     this.id = $ID();
@@ -28,6 +32,10 @@ export class Shape {
   draw(ctx: OffscreenCanvasRenderingContext2D) {
     console.log("[Shape:draw] Not Implemented", ctx);
     throw new Error("[Shape:draw] Not Implemented");
+  }
+
+  translate(dX: number, dY: number) {
+    console.log("[Shape:translate] Not Implemented", `${dX},${dY}`);
   }
 
   configure(ctx: OffscreenCanvasRenderingContext2D) {

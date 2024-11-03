@@ -1,5 +1,5 @@
 import { MouseEvent } from "react";
-import { Square } from 'lucide-react'
+import { Square } from "lucide-react";
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
@@ -36,16 +36,28 @@ export class Rectangle extends Shape {
       this.start.x,
       this.start.y,
       this.end.x - this.start.x,
-      this.end.y - this.start.y
+      this.end.y - this.start.y,
     );
-    
+
     ctx.fill();
     ctx.stroke();
   }
 
+  translate(dX: number, dY: number): void {
+    if (this.start) {
+      this.start.x += dX;
+      this.start.y += dY
+    }
+
+    if (this.end) {
+      this.end.x += dX;
+      this.end.y += dY;
+    }
+  }
+
   isHovered(e: MouseEvent<HTMLCanvasElement>) {
     if (!this.start || !this.end) return false;
-    return (this.start.x - 5) <= e.clientX && e.clientX <= (this.end.x + 5) && 
-      (this.start.y - 5) <= e.clientY && e.clientY <= (this.end.y + 5);
+    return this.start.x <= e.clientX && e.clientX <= this.end.x &&
+      this.start.y <= e.clientY && e.clientY <= this.end.y;
   }
 }

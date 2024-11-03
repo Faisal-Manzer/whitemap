@@ -1,5 +1,5 @@
 import { MouseEvent } from "react";
-import { Circle } from 'lucide-react'
+import { Circle } from "lucide-react";
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
@@ -41,8 +41,35 @@ export class Oval extends Shape {
       0,
       2 * Math.PI,
     );
-    
+
     ctx.fill();
     ctx.stroke();
+  }
+
+  translate(dX: number, dY: number): void {
+    if (this.start) {
+      this.start.x += dX;
+      this.start.y += dY
+    }
+
+    if (this.end) {
+      this.end.x += dX;
+      this.end.y += dY;
+    }
+  }
+
+  isHovered(e: MouseEvent<HTMLCanvasElement>): boolean {
+    if (!this.start || !this.end) return false;
+
+    const xCenter = (this.start.x + this.end.x) / 2;
+    const yCenter = (this.start.y + this.end.y) / 2;
+    const radiusX = Math.abs(this.start.x - this.end.x) / 2;
+    const radiusY = Math.abs(this.start.y - this.end.y) / 2;
+
+    const dx = e.clientX - xCenter;
+    const dy = e.clientY - yCenter;
+    const distance = Math.pow(dx / radiusX, 2) + Math.pow(dy / radiusY, 2);
+
+    return distance <= 1;
   }
 }

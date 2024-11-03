@@ -1,4 +1,4 @@
-import { forwardRef, useState, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { Shape } from "../../shapes";
 import { ShapeConfiguration } from "../../types";
 import { ColorSelector } from "../atoms/ColorSelector";
@@ -92,5 +92,5 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         </div>
       </div>
     );
-  }
+  },
 );

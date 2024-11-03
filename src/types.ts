@@ -13,6 +13,6 @@ export interface ShapePanelConfiguration {
 export interface ShapeConfiguration {
   border: string;
   borderWidth: number;
-  
+
   background: string;
 }

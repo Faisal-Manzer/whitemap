@@ -1,5 +1,5 @@
 import { MouseEvent } from "react";
-import { MousePointer2 } from 'lucide-react'
+import { MousePointer2 } from "lucide-react";
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
@@ -24,7 +24,7 @@ export class Pointer extends Shape {
 
     this.config.borderWidth = 0.5;
     this.config.border = "#7c3aed";
-    this.config.background = 'rgba(221, 214, 254, 0.5)';
+    this.config.background = "rgba(221, 214, 254, 0.5)";
   }
 
   move(e: MouseEvent<HTMLCanvasElement>): void {
