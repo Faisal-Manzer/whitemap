@@ -7,18 +7,21 @@ import {
   useState,
 } from "react";
 
-import * as Shapes from "../shapes";
+import { Shape, Tools, Pointer } from "../shapes";
 import { cn } from "../utils/cn";
 import { ShapePanel, ShapePanelRef } from "./panels/ShapePanel";
+import { $box } from "../utils/coordinate";
 
 function App() {
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const realCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const shapesRef = useRef<Shapes.Shape[]>([]);
-  const currentShapeRef = useRef<Shapes.Shape | null>(null);
-  const [selectedShape, setSelectedShape] = useState<keyof typeof Shapes.Tools>(
-    Object.keys(Shapes.Tools)[0]
+  const mouseRef = useRef<MouseEvent<HTMLCanvasElement> | null>(null);
+
+  const shapesRef = useRef<Shape[]>([]);
+  const currentShapeRef = useRef<Shape | null>(null);
+  const [selectedShape, setSelectedShape] = useState<keyof typeof Tools>(
+    Pointer.name
   );
 
   const panelRef = useRef<ShapePanelRef>(null);
@@ -54,9 +57,9 @@ function App() {
     const offScreenCanvasCtx = offScreenCanvas.getContext("2d");
 
     if (!offScreenCanvasCtx) return;
-    paint(offScreenCanvasCtx);
-
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+    paint(offScreenCanvasCtx);
     canvasCtx.drawImage(offScreenCanvas, 0, 0);
   };
 
@@ -70,31 +73,23 @@ function App() {
 
   const onMouseDown = () => {
     const panel = panelRef.current;
-    if (!selectedShape || !panel) return;
+    if (!panel) return;
+    if (currentShapeRef.current?.isSelected) return;
 
-    const shape = Shapes.Tools[selectedShape];
+    const shape = Tools[selectedShape];
     currentShapeRef.current = new shape(panel.getConfig());
-
-    const canvas = drawingCanvasRef.current;
-    if (!canvas) return;
-
-    canvas.style.cursor = shape.pointer;
   };
 
   const onMouseMove = (e: MouseEvent<HTMLCanvasElement>) => {
-    const canvas = drawingCanvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    currentShapeRef.current?.move({
-      ...e,
-      clientX: e.clientX - rect.left,
-      clientY: e.clientY - rect.top,
-    });
+    mouseRef.current = e;
   };
 
   const onMouseUp = () => {
+    console.log("[onMouseUp]");
+
     if (!currentShapeRef.current) return;
+    if (currentShapeRef.current.isSelected) return;
+
     if (!currentShapeRef.current.drawingOnly) {
       shapesRef.current = [...shapesRef.current, currentShapeRef.current];
     }
@@ -105,19 +100,74 @@ function App() {
     const canvas = drawingCanvasRef.current;
     if (!canvas) return;
 
-    canvas.style.cursor = Shapes.Shape.cursor;
-
+    canvas.style.cursor = Shape.cursor;
     const canvasCtx = canvas.getContext("2d");
     canvasCtx?.clearRect(0, 0, canvas.width, canvas.height);
   };
+
+  const resetSelected = useCallback(() => {
+    if (currentShapeRef.current?.isSelected) {
+      currentShapeRef.current.isSelected = false;
+      shapesRef.current = [...shapesRef.current, currentShapeRef.current];
+
+      currentShapeRef.current = null;
+      realDraw();
+    }
+  }, [realDraw]);
+
+  const onClick = (e: MouseEvent<HTMLCanvasElement>) => {
+    resetSelected();
+
+    if (selectedShape !== Pointer.name) return;
+    const canvas = drawingCanvasRef.current;
+    if (!canvas) return;
+
+    const clickedElements = shapesRef.current.filter((shape) =>
+      shape.isHovered($box(canvas, e))
+    );
+
+    if (clickedElements.length > 0) {
+      currentShapeRef.current = clickedElements[clickedElements.length - 1];
+      currentShapeRef.current.isSelected = true;
+      shapesRef.current = shapesRef.current.filter(
+        (s) => s.id !== currentShapeRef.current?.id
+      );
+
+      realDraw();
+    }
+  };
+
+  const updateCursorStyle = useCallback(() => {
+    const e = mouseRef.current;
+    const canvas = drawingCanvasRef.current;
+
+    if (!e || !canvas) return;
+
+    if (currentShapeRef.current) {
+      if (currentShapeRef.current.isSelected) return;
+
+      currentShapeRef.current.move($box(canvas, e));
+      canvas.style.cursor = Tools[selectedShape].cursor;
+    } else if (selectedShape === Pointer.name) {
+      const hoveredElement = shapesRef.current.filter((shape) =>
+        shape.isHovered(mouseRef.current!)
+      );
+      if (hoveredElement.length > 0) canvas.style.cursor = "move";
+      else canvas.style.cursor = "default";
+    } else {
+      canvas.style.cursor = "default";
+    }
+  }, [selectedShape]);
 
   useEffect(() => {
     let loopId: number;
     const loop = () => {
       loopId = requestAnimationFrame(loop);
+
       draw(drawingCanvasRef, (ctx) => {
         currentShapeRef.current?.draw(ctx);
       });
+      updateCursorStyle();
     };
 
     setup(drawingCanvasRef);
@@ -129,15 +179,21 @@ function App() {
     return () => {
       cancelAnimationFrame(loopId);
     };
-  }, [selectedShape, realDraw]);
+  }, [realDraw, updateCursorStyle]);
+
+  useEffect(() => {
+    if (currentShapeRef.current?.isSelected) {
+      resetSelected();
+    }
+  }, [selectedShape, resetSelected]);
 
   return (
     <div>
       <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen">
         <div className="flex items-center gap-2 border-gray-100 bg-white shadow-lg p-1 border rounded-xl text-sm">
-          {Object.keys(Shapes.Tools).map((tool) => {
+          {Object.keys(Tools).map((tool) => {
             const isSelected = selectedShape === tool;
-            const shape = Shapes.Tools[tool];
+            const shape = Tools[tool];
             const { icon: Icon } = shape;
 
             return (
@@ -162,15 +218,16 @@ function App() {
       </div>
       <ShapePanel
         ref={panelRef}
-        shape={Shapes.Tools[selectedShape]}
+        shape={Tools[selectedShape]}
         key={selectedShape + "-" + (currentShapeRef.current?.id || "none")}
       />
       <canvas
         ref={drawingCanvasRef}
-        className="top-0 left-0 z-10 fixed m-0 p-0 w-screen h-screen"
+        className="top-0 left-0 z-10 fixed opacity-70 m-0 p-0 w-screen h-screen"
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
+        onClick={onClick}
       />
       <canvas
         ref={realCanvasRef}

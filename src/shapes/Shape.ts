@@ -39,7 +39,8 @@ export class Shape {
     ctx.lineWidth = this.config.borderWidth;
   }
 
-  get isHovered() {
+  isHovered(e: MouseEvent<HTMLCanvasElement>) {
+    console.log("[Shape:isHovered] Not Implemented", e);
     return false;
   }
 }

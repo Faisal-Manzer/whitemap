@@ -42,4 +42,10 @@ export class Rectangle extends Shape {
     ctx.fill();
     ctx.stroke();
   }
+
+  isHovered(e: MouseEvent<HTMLCanvasElement>) {
+    if (!this.start || !this.end) return false;
+    return (this.start.x - 5) <= e.clientX && e.clientX <= (this.end.x + 5) && 
+      (this.start.y - 5) <= e.clientY && e.clientY <= (this.end.y + 5);
+  }
 }
