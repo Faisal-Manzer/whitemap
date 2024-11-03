@@ -17,12 +17,12 @@ export const ElementSelector: FC<ElementSelectorProps> = ({
   <div
     className={cn(
       "p-0.5 border-2 rounded-lg border-white",
-      isSelected && selectedClass,
+      isSelected && selectedClass
     )}
   >
     <div
       onClick={select}
-      className="rounded w-6 h-6 cursor-pointer overflow-clip"
+      className="flex justify-center items-center rounded w-5 h-5 cursor-pointer overflow-clip"
     >
       {children}
     </div>

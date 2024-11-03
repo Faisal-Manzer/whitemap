@@ -5,7 +5,7 @@ import { Pen } from "./Pen";
 import { Pointer } from "./Pointer";
 import { Rectangle } from "./Rectangle";
 
-export { Pointer };
+export { Pointer, Pen, Rectangle, Oval };
 export const Tools = {
   [Pointer.name]: Pointer,
   [Pen.name]: Pen,

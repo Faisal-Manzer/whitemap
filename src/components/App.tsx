@@ -1,6 +1,6 @@
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import { Pointer, Shape, Tools } from "../shapes";
+import { Pointer, Pen, Shape, Tools } from "../shapes";
 import { cn } from "../utils/cn";
 import { ShapePanel, ShapePanelRef } from "./panels/ShapePanel";
 import { $box } from "../utils/coordinate";
@@ -16,9 +16,7 @@ function App() {
   const shapesRef = useRef<Shape[]>([]);
   const currentShapeRef = useRef<Shape | null>(null);
 
-  const [activeTool, setActiveTool] = useState<keyof typeof Tools>(
-    Pointer.name
-  );
+  const [activeTool, setActiveTool] = useState<keyof typeof Tools>(Pen.name);
 
   const panelRef = useRef<ShapePanelRef>(null);
   const isPointerActive = activeTool === Pointer.name;
@@ -156,8 +154,19 @@ function App() {
 
   return (
     <div>
-      <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen">
-        <div className="flex items-center gap-2 border-gray-100 bg-white shadow-lg p-1 border rounded-xl text-sm">
+      <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen"></div>
+      <ShapePanel
+        ref={panelRef}
+        shape={
+          activeTool === Pointer.name
+            ? currentShapeRef.current?.constructor
+              ? Tools[currentShapeRef.current?.constructor.name]
+              : Pointer
+            : Tools[activeTool]
+        }
+        key={activeTool + "-" + (currentShapeRef.current?.id || "none")}
+      >
+        <div className="flex items-center gap-x-2">
           {Object.keys(Tools).map((tool) => {
             const isSelected = tool === activeTool;
             const shape = Tools[tool];
@@ -182,18 +191,7 @@ function App() {
             );
           })}
         </div>
-      </div>
-      <ShapePanel
-        ref={panelRef}
-        shape={
-          activeTool === Pointer.name
-            ? currentShapeRef.current?.constructor
-              ? Tools[currentShapeRef.current?.constructor.name]
-              : Pointer
-            : Tools[activeTool]
-        }
-        key={activeTool + "-" + (currentShapeRef.current?.id || "none")}
-      />
+      </ShapePanel>
       <canvas
         ref={drawingCanvasRef}
         className="top-0 left-0 z-10 fixed opacity-70 m-0 p-0 w-screen h-screen"
