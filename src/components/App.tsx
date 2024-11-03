@@ -9,6 +9,7 @@ import {
 
 import * as Shapes from "../shapes";
 import { cn } from "../utils/cn";
+import { ShapePanel, ShapePanelRef } from "./panels/ShapePanel";
 
 function App() {
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,9 +17,11 @@ function App() {
 
   const shapesRef = useRef<Shapes.Shape[]>([]);
   const currentShapeRef = useRef<Shapes.Shape | null>(null);
+  const [selectedShape, setSelectedShape] = useState<keyof typeof Shapes.Tools>(
+    Object.keys(Shapes.Tools)[0]
+  );
 
-  const [selectedShape, setSelectedShape] =
-    useState<keyof typeof Shapes.Tools>("Pointer");
+  const panelRef = useRef<ShapePanelRef>(null);
 
   const setup = (canvasRef: RefObject<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -60,16 +63,17 @@ function App() {
   const realDraw = useCallback(() => {
     draw(realCanvasRef, (ctx) => {
       for (const shape of shapesRef.current) {
-        shape.draw(ctx);
+        if (!shape.isSelected) shape.draw(ctx);
       }
     });
   }, []);
 
   const onMouseDown = () => {
-    if (!selectedShape) return;
+    const panel = panelRef.current;
+    if (!selectedShape || !panel) return;
 
     const shape = Shapes.Tools[selectedShape];
-    currentShapeRef.current = new shape();
+    currentShapeRef.current = new shape(panel.getConfig());
 
     const canvas = drawingCanvasRef.current;
     if (!canvas) return;
@@ -109,15 +113,10 @@ function App() {
 
   useEffect(() => {
     let loopId: number;
-
     const loop = () => {
       loopId = requestAnimationFrame(loop);
-
-      const currentShape = currentShapeRef.current;
-      if (!currentShape) return;
-
       draw(drawingCanvasRef, (ctx) => {
-        currentShape.draw(ctx);
+        currentShapeRef.current?.draw(ctx);
       });
     };
 
@@ -126,6 +125,7 @@ function App() {
 
     realDraw();
     loop();
+
     return () => {
       cancelAnimationFrame(loopId);
     };
@@ -136,11 +136,9 @@ function App() {
       <div className="top-4 left-0 z-20 fixed flex justify-center items-center w-screen">
         <div className="flex items-center gap-2 border-gray-100 bg-white shadow-lg p-1 border rounded-xl text-sm">
           {Object.keys(Shapes.Tools).map((tool) => {
-            const shape = Shapes.Tools[tool];
-            if (!shape) return;
-
-            const { icon: Icon } = shape;
             const isSelected = selectedShape === tool;
+            const shape = Shapes.Tools[tool];
+            const { icon: Icon } = shape;
 
             return (
               <div
@@ -148,9 +146,9 @@ function App() {
                 key={tool}
                 className={cn(
                   "p-2 cursor-pointer",
-                  isSelected && "bg-blue-100 rounded-lg"
+                  isSelected && "bg-gray-200 rounded-lg"
                 )}
-                title={shape.name}
+                title={tool}
               >
                 <Icon
                   size={16}
@@ -162,6 +160,11 @@ function App() {
           })}
         </div>
       </div>
+      <ShapePanel
+        ref={panelRef}
+        shape={Shapes.Tools[selectedShape]}
+        key={selectedShape + "-" + (currentShapeRef.current?.id || "none")}
+      />
       <canvas
         ref={drawingCanvasRef}
         className="top-0 left-0 z-10 fixed m-0 p-0 w-screen h-screen"
@@ -171,7 +174,7 @@ function App() {
       />
       <canvas
         ref={realCanvasRef}
-        className="top-0 left-0 z-0 fixed bg-gray-50 m-0 p-0 w-screen h-screen"
+        className="top-0 left-0 z-0 fixed m-0 p-0 w-screen h-screen"
       />
     </div>
   );

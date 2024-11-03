@@ -3,17 +3,18 @@ import { PencilLine } from 'lucide-react'
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
-import { Point } from "../types";
+import { Point, ShapeConfiguration, ShapePanelConfiguration } from "../types";
 
 export class Pen extends Shape {
   static name: string = "Pen";
   static icon = PencilLine;
   static pointer: string = "crosshair";
+  static panel: ShapePanelConfiguration = { ...Shape.panel, background: false };
 
   points: Point[];
 
-  constructor() {
-    super();
+  constructor(config: ShapeConfiguration) {
+    super(config);
     this.points = [];
   }
 
@@ -24,12 +25,7 @@ export class Pen extends Shape {
   draw(ctx: OffscreenCanvasRenderingContext2D): void {
     const points = this.points;
 
-    ctx.beginPath();
-
-    ctx.lineWidth = 5;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#c0392b";
-
+    this.configure(ctx);
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
       if (i === points.length - 1) {

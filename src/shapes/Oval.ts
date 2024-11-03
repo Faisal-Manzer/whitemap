@@ -3,7 +3,7 @@ import { Circle } from 'lucide-react'
 
 import { Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
-import { Point } from "../types";
+import { Point, ShapeConfiguration } from "../types";
 
 export class Oval extends Shape {
   static name: string = "Oval";
@@ -13,8 +13,8 @@ export class Oval extends Shape {
   start: Point | null;
   end: Point | null;
 
-  constructor() {
-    super();
+  constructor(config: ShapeConfiguration) {
+    super(config);
 
     this.start = null;
     this.end = null;
@@ -31,11 +31,7 @@ export class Oval extends Shape {
   draw(ctx: OffscreenCanvasRenderingContext2D): void {
     if (!this.start || !this.end) return;
 
-    ctx.beginPath();
-    ctx.lineWidth = 5;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#0000ff";
-
+    this.configure(ctx);
     ctx.ellipse(
       (this.end.x + this.start.x) / 2,
       (this.end.y + this.start.y) / 2,
@@ -45,6 +41,8 @@ export class Oval extends Shape {
       0,
       2 * Math.PI,
     );
+    
+    ctx.fill();
     ctx.stroke();
   }
 }
