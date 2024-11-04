@@ -9,6 +9,7 @@ import {
   ShapeConfiguration,
   ShapePanelConfiguration,
 } from "../types";
+import { isInsideBoundedRect } from "../utils/mouse";
 
 export class Rectangle extends Shape {
   static name: string = "Rectangle";
@@ -84,12 +85,10 @@ export class Rectangle extends Shape {
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>) {
-    if (!this.start || !this.end) return false;
-    return (this.start.x <= e.clientX && e.clientX <= this.end.x &&
-      this.start.y <= e.clientY && e.clientY <= this.end.y) || (
-        this.end.x <= e.clientX && e.clientX <= this.start.x &&
-        this.end.y <= e.clientY && e.clientY <= this.start.y
-      );
+    return isInsideBoundedRect(
+      e,
+      this.boundedRectangle()
+    );
   }
 
   isEmpty() {

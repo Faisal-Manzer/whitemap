@@ -13,6 +13,7 @@ import { $box } from "../utils/coordinate";
 import { draw, drawBoundingBox, setup } from "../utils/drawing";
 import { PanelElement } from "./atoms/PanelElement";
 import { ElementSelector } from "./atoms/ElementSelector";
+import { $click, $drag } from "../utils/mouse";
 
 function App() {
   const realCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,7 +21,7 @@ function App() {
 
   const [mode, setMode] = useState<"draw" | "select">("draw");
   const [activeToolName, setActiveToolName] = useState<keyof typeof Tools>(
-    Pen.name,
+    Pen.name
   );
   const activeTool = Tools[activeToolName];
 
@@ -32,6 +33,7 @@ function App() {
 
   const drawingRef = useRef<Shape | null>(null);
   const layersRef = useRef<Shape[]>([]);
+  const [selected, setSelected] = useState<Shape | null>(null);
 
   const drawOnRealCanvas = useCallback(() => {
     draw(realCanvasRef, (ctx) => {
@@ -53,27 +55,65 @@ function App() {
     });
   }, []);
 
+  const resetMouse = useCallback(() => {
+    onMouseDownRef.current = null;
+    onMouseMoveRef.current = null;
+    onMouseUpRef.current = null;
+  }, []);
+
+  const selectShape = useCallback((shape: Shape, setTool = true) => {
+    shape.isSelected = true;
+    drawingRef.current = shape;
+
+    setMode("select");
+    setSelected(shape);
+    if (setTool) setActiveToolName(shape.constructor.name);
+  }, []);
+
+  const deselectAll = useCallback(() => {
+    drawingRef.current = null;
+    layersRef.current = layersRef.current.map((s) => {
+      s.isSelected = false;
+      return s;
+    });
+
+    setMode("draw");
+    setSelected(null);
+  }, []);
+
+  const translateSelected = useCallback(() => {
+    const delta = {
+      x: onMouseMoveRef.current!.clientX - prevMouseMoveRef.current!.clientX,
+      y: onMouseMoveRef.current!.clientY - prevMouseMoveRef.current!.clientY,
+    };
+
+    for (const layer of layersRef.current) {
+      if (layer.isSelected) layer.translate(delta);
+    }
+  }, []);
+
   const attach = useCallback(() => {
     if (!drawingRef.current) return;
     if (drawingRef.current.isEmpty()) return;
+    if (drawingRef.current.drawingOnly) return;
 
     if (!drawingRef.current.isAttached) {
       drawingRef.current.isAttached = true;
       layersRef.current.push(drawingRef.current);
+
+      selectShape(drawingRef.current);
     }
 
     drawingRef.current = null;
-  }, []);
+  }, [selectShape]);
 
   const runEvent = useCallback(
     (
       name: "onMouseUp" | "onMouseMove" | "onMouseDown",
-      ref: MutableRefObject<
-        MouseEvent<
-          HTMLCanvasElement,
-          globalThis.MouseEvent
-        > | null
-      >,
+      ref: MutableRefObject<MouseEvent<
+        HTMLCanvasElement,
+        globalThis.MouseEvent
+      > | null>
     ) => {
       if (!panelRef.current) return;
 
@@ -87,7 +127,7 @@ function App() {
         ref.current = null;
       }
     },
-    [activeTool, attach],
+    [activeTool, attach]
   );
 
   const registerEvent =
@@ -103,63 +143,33 @@ function App() {
     let loopId: number;
     const loop = () => {
       loopId = requestAnimationFrame(loop);
+      const mouse = {
+        onMouseDownRef,
+        onMouseMoveRef,
+        onMouseUpRef,
+        prevMouseMoveRef,
+      };
 
-      if (
-        mode === "select" &&
-        onMouseDownRef.current &&
-        drawingRef.current &&
-        onMouseMoveRef.current &&
-        prevMouseMoveRef.current &&
-        !onMouseUpRef.current
-      ) {
-        const delta = {
-          x: onMouseMoveRef.current.clientX - prevMouseMoveRef.current.clientX,
-          y: onMouseMoveRef.current.clientY - prevMouseMoveRef.current.clientY,
-        };
-
-        drawingRef.current.translate(delta);
-
-        // onMouseMoveRef.current = null;
-      }
-
-      const isClicked = onMouseDownRef.current &&
-        onMouseUpRef.current &&
-        Math.abs(
-            onMouseDownRef.current.clientX - onMouseUpRef.current.clientX,
-          ) <= 5 &&
-        Math.abs(
-            onMouseDownRef.current.clientY - onMouseUpRef.current.clientY,
-          ) <= 5;
-
-      if (isClicked) {
-        if (drawingRef.current) {
-          drawingRef.current.isSelected = false;
-        }
-
+      if ($click(mouse)) {
         const hoveredElements = layersRef.current.filter((s) =>
           onMouseUpRef.current ? s.isHovered(onMouseUpRef.current) : false
         );
 
+        deselectAll();
         if (hoveredElements.length > 0) {
-          const shape = hoveredElements[hoveredElements.length - 1];
-          shape.isSelected = true;
-          drawingRef.current = shape;
-
-          setMode("select");
-        } else {
-          drawingRef.current = null;
-          layersRef.current = layersRef.current.map((s) => {
-            s.isSelected = false;
-            return s;
-          });
-          setMode("draw");
+          selectShape(hoveredElements[hoveredElements.length - 1]);
         }
 
-        onMouseDownRef.current = null;
-        onMouseMoveRef.current = null;
-        onMouseUpRef.current = null;
+        return resetMouse();
+      }
 
-        return;
+      if (mode === "select" && $drag(mouse)) {
+        for (const layer of layersRef.current) {
+          if (layer.isSelected) {
+            translateSelected();
+            break;
+          }
+        }
       }
 
       if (mode === "draw") {
@@ -177,17 +187,28 @@ function App() {
     return () => {
       cancelAnimationFrame(loopId);
     };
-  }, [activeToolName, runEvent, drawOnRealCanvas, mode, attach]);
+  }, [
+    activeToolName,
+    runEvent,
+    drawOnRealCanvas,
+    mode,
+    attach,
+    selectShape,
+    resetMouse,
+    deselectAll,
+    translateSelected,
+  ]);
 
   return (
     <div>
       <ShapePanel
         ref={panelRef}
         shape={activeTool}
-        key={activeToolName + (drawingRef.current?.id || "none")}
+        selected={selected}
         drawing={drawingRef}
         layers={layersRef}
         attach={attach}
+        key={activeTool + (selected?.id || "-")}
       >
         <PanelElement title="Tools" show>
           {Object.keys(Tools).map((tool) => {
@@ -198,7 +219,11 @@ function App() {
             return (
               <ElementSelector
                 isSelected={isSelected}
-                select={() => setActiveToolName(tool)}
+                select={() => {
+                  resetMouse();
+                  deselectAll();
+                  setActiveToolName(tool);
+                }}
               >
                 <Icon
                   size={16}

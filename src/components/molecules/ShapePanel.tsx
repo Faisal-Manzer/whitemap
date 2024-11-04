@@ -16,6 +16,7 @@ import { Circle, Copy, Minus, Square, Trash } from "lucide-react";
 
 export interface ShapePanelProps extends PropsWithChildren {
   shape: typeof Shape;
+  selected: Shape | null;
   drawing: MutableRefObject<Shape | null>;
   layers: MutableRefObject<Shape[]>;
   attach: () => void;
@@ -35,9 +36,14 @@ const BACKGROUND_COLORS = [
 
 const BORDER_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
 
+type ShapeConstructor = typeof Shape | undefined | null;
 export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
-  ({ shape, drawing, layers, attach, children }, ref) => {
-    const initialConfig = drawing.current?.config;
+  ({ shape: s, drawing, layers, selected, attach, children }, ref) => {
+    const current = selected || drawing.current;
+    const initialConfig = current?.config;
+
+    const shape = (current?.constructor as ShapeConstructor) || s;
+
     const [background, setBackground] = useState<
       ShapeConfiguration["background"]
     >(initialConfig?.background || BACKGROUND_COLORS[0]);
@@ -63,12 +69,12 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     }));
 
     useEffect(() => {
-      if (drawing.current) {
-        drawing.current.config = config;
+      if (current) {
+        current.config = config;
       }
-    }, [config, drawing]);
+    }, [config, current]);
 
-    const { panel } = shape;
+    const { panel } = shape as typeof Shape;
 
     return (
       <div className="top-36 left-4 z-20 fixed border-gray-100 bg-white shadow-lg p-4 border rounded-lg">
@@ -137,17 +143,13 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
 
             <PanelElement
               title="Actions"
-              show={
-                !!drawing.current &&
-                drawing.current.isSelected &&
-                drawing.current.isAttached
-              }
+              show={!!current && current.isSelected && current.isAttached}
             >
               <ElementSelector
                 isSelected
                 select={() => {
                   layers.current = layers.current.filter(
-                    (s) => s.id !== drawing.current?.id
+                    (s) => s.id !== current?.id
                   );
                   drawing.current = null;
                 }}
@@ -158,14 +160,14 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
               <ElementSelector
                 isSelected
                 select={() => {
-                  if (drawing.current) {
-                    drawing.current.isSelected = false;
+                  if (current) {
+                    current.isSelected = false;
                     layers.current = layers.current.map((s) => {
                       s.isSelected = false;
                       return s;
                     });
 
-                    drawing.current = drawing.current.duplicate();
+                    drawing.current = current.duplicate();
                     attach();
                   }
                 }}
