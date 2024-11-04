@@ -14,7 +14,7 @@ export const PanelElement: FC<PanelElementProps> = ({
 
   return (
     <div>
-      <div>{title}</div>
+      <div className="text-gray-500 text-xs">{title}</div>
       <div className="flex items-center gap-2">{children}</div>
     </div>
   );

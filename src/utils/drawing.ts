@@ -1,4 +1,5 @@
 import { RefObject } from "react";
+import { BondedRectangle } from "../types";
 
 export const setup = (canvasRef: RefObject<HTMLCanvasElement>) => {
   const canvas = canvasRef.current;
@@ -36,3 +37,22 @@ export const draw = (
   paint(offScreenCanvasCtx);
   canvasCtx.drawImage(offScreenCanvas, 0, 0);
 };
+
+export const drawBoundingBox = (ctx: OffscreenCanvasRenderingContext2D, rect: BondedRectangle | null) => {
+  if (!rect) return;
+
+  ctx.beginPath();
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#4c1d95";
+  ctx.lineWidth = 1;
+
+  ctx.rect(
+    rect.topLeft.x - 10,
+    rect.topLeft.y - 10,
+    rect.bottomRight.x - rect.topLeft.x + 20,
+    rect.bottomRight.y - rect.topLeft.y + 20
+  );
+
+  ctx.stroke();
+  ctx.setLineDash([]);
+}

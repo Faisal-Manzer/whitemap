@@ -1,7 +1,7 @@
-import { MouseEvent } from "react";
+import { MouseEvent, MutableRefObject } from "react";
 import { Square } from "lucide-react";
 
-import { Shape } from "./Shape";
+import { EventModifier, Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
 import { BondedRectangle, Point, ShapeConfiguration } from "../types";
 
@@ -10,9 +10,6 @@ export class Rectangle extends Shape {
   static icon = Square;
   static pointer: string = "crosshair";
 
-  start: Point | null;
-  end: Point | null;
-
   constructor(config: ShapeConfiguration) {
     super(config);
 
@@ -20,23 +17,30 @@ export class Rectangle extends Shape {
     this.end = null;
   }
 
-  move(e: MouseEvent<HTMLCanvasElement>): void {
-    if (this.start === null) {
-      this.start = $xy(e);
+  static onMouseMove({ e, shape }: EventModifier): void {
+    if (!shape.current) return;
+
+    if (shape.current.start === null) {
+      shape.current.start = $xy(e);
+    } else if (e.shiftKey) {
+      // TODO: Implement shift behavior
+      shape.current.end = $xy(e);
     } else {
-      this.end = $xy(e);
+      shape.current.end = $xy(e);
     }
   }
 
   boundedRectangle(): BondedRectangle | null {
     if (!this.start || !this.end) return null;
 
-    console.log("[Shape:boundedRectangle] Not Implemented");
+    if (this.start.x > this.end.x && this.start.y > this.end.y ) return {
+      topLeft: this.end,
+      bottomRight: this.start,
+    }
+    
     return {
       topLeft: this.start,
       bottomRight: this.end,
-      // topRight: { x: this.start.x, y: this.end.y },
-      // bottomLeft: { x: this.end.x, y: this.start.y },
     };
   }
 
@@ -55,21 +59,28 @@ export class Rectangle extends Shape {
     ctx.stroke();
   }
 
-  translate(dX: number, dY: number): void {
+  translate(delta: Point): void {
     if (this.start) {
-      this.start.x += dX;
-      this.start.y += dY;
+      this.start.x += delta.x;
+      this.start.y += delta.y;
     }
 
     if (this.end) {
-      this.end.x += dX;
-      this.end.y += dY;
+      this.end.x += delta.x;
+      this.end.y += delta.y;
     }
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>) {
     if (!this.start || !this.end) return false;
-    return this.start.x <= e.clientX && e.clientX <= this.end.x &&
-      this.start.y <= e.clientY && e.clientY <= this.end.y;
+    return (this.start.x <= e.clientX && e.clientX <= this.end.x &&
+      this.start.y <= e.clientY && e.clientY <= this.end.y) || (
+        this.end.x <= e.clientX && e.clientX <= this.start.x &&
+      this.end.y <= e.clientY && e.clientY <= this.start.y
+      );
+  }
+
+  isEmpty() {
+    return !this.start || !this.end;
   }
 }

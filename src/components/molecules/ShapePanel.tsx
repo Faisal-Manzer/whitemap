@@ -3,6 +3,9 @@ import {
   PropsWithChildren,
   useImperativeHandle,
   useState,
+  MutableRefObject,
+  useEffect,
+  useMemo,
 } from "react";
 import { Shape } from "../../shapes";
 import { ShapeConfiguration } from "../../types";
@@ -13,6 +16,7 @@ import { Minus } from "lucide-react";
 
 export interface ShapePanelProps extends PropsWithChildren {
   shape: typeof Shape;
+  drawing: MutableRefObject<Shape | null>;
 }
 
 export interface ShapePanelRef {
@@ -30,16 +34,34 @@ const BACKGROUND_COLORS = [
 const BORDER_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
 
 export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
-  ({ shape, children }, ref) => {
-    const [background, setBackground] = useState(BACKGROUND_COLORS[0]);
-    const [border, setBorder] = useState(BORDER_COLORS[0]);
-    const [borderWidth, setBorderWidth] = useState(1);
+  ({ shape, drawing, children }, ref) => {
+    const initialConfig = drawing.current?.config;
+    const [background, setBackground] = useState(
+      initialConfig?.background || BACKGROUND_COLORS[0]
+    );
+    const [border, setBorder] = useState(
+      initialConfig?.border || BORDER_COLORS[0]
+    );
+    const [borderWidth, setBorderWidth] = useState(
+      initialConfig?.borderWidth || 1
+    );
+
+    const config: ShapeConfiguration = useMemo(
+      () => ({ border, background, borderWidth }),
+      [border, background, borderWidth]
+    );
 
     useImperativeHandle(ref, () => ({
       getConfig() {
-        return { border, background, borderWidth };
+        return config;
       },
     }));
+
+    useEffect(() => {
+      if (drawing.current) {
+        drawing.current.config = config;
+      }
+    }, [config, drawing]);
 
     const { panel } = shape;
 
@@ -48,7 +70,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         {children}
 
         {!panel.noPanel && (
-          <div className="flex flex-col gap-4 mt-4 text-gray-500 text-xs">
+          <div className="flex flex-col gap-4 mt-4">
             <PanelElement title="Background" show={panel.background}>
               {BACKGROUND_COLORS.map((color) => (
                 <ColorSelector
@@ -95,5 +117,5 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         )}
       </div>
     );
-  },
+  }
 );

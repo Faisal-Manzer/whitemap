@@ -1,15 +1,25 @@
-import { MouseEvent } from "react";
+import { MouseEvent, MutableRefObject } from "react";
 import { Shapes } from "lucide-react";
 
 import { $ID } from "../utils/helpers";
 import {
   BondedRectangle,
+  Point,
   ShapeConfiguration,
   ShapePanelConfiguration,
 } from "../types";
 
+export interface EventModifier {
+  e: MouseEvent<HTMLCanvasElement>;
+  shape: MutableRefObject<Shape | null>;
+  config: ShapeConfiguration;
+  attach: () => void;
+}
+
 export class Shape {
   id: string;
+  isSelected = false;
+  isAttached = false;
   drawingOnly = false;
   config: ShapeConfiguration;
 
@@ -23,14 +33,31 @@ export class Shape {
     borderWidth: 3,
   };
 
+  start: Point | null;
+  end: Point | null;
+  points: Point[];
+
   constructor(config: ShapeConfiguration) {
     this.id = $ID();
     this.config = config;
+
+    this.start = null;
+    this.end = null;
+    this.points = [];
   }
 
-  move(e: MouseEvent<HTMLCanvasElement>): void {
-    console.log("[Shape:move] Not Implemented", e);
-    throw new Error("[Shape:move] Not Implemented");
+  static onMouseDown({ shape, config }: EventModifier): void {
+    if (!shape.current) {
+      shape.current = new this(config);
+    }
+  }
+
+  static onMouseMove( { e, shape }: EventModifier): void {
+    console.log("[Shape:onMouseMove] Not Implemented", e, shape);
+  }
+
+  static onMouseUp({ attach }: EventModifier): void {
+    attach();
   }
 
   boundedRectangle(): BondedRectangle | null {
@@ -40,11 +67,10 @@ export class Shape {
 
   draw(ctx: OffscreenCanvasRenderingContext2D) {
     console.log("[Shape:draw] Not Implemented", ctx);
-    throw new Error("[Shape:draw] Not Implemented");
   }
 
-  translate(dX: number, dY: number) {
-    console.log("[Shape:translate] Not Implemented", `${dX},${dY}`);
+  translate(delta: Point) {
+    console.log("[Shape:translate] Not Implemented", delta);
   }
 
   configure(ctx: OffscreenCanvasRenderingContext2D) {
@@ -59,5 +85,9 @@ export class Shape {
   isHovered(e: MouseEvent<HTMLCanvasElement>) {
     console.log("[Shape:isHovered] Not Implemented", e);
     return false;
+  }
+
+  isEmpty() {
+    return true;
   }
 }

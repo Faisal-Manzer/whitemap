@@ -1,9 +1,9 @@
 import { MouseEvent } from "react";
 import { PencilLine } from "lucide-react";
 
-import { Shape } from "./Shape";
+import { EventModifier, Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
-import { Point, ShapeConfiguration, ShapePanelConfiguration } from "../types";
+import { BondedRectangle, Point, ShapeConfiguration, ShapePanelConfiguration } from "../types";
 
 export class Pen extends Shape {
   static name: string = "Pen";
@@ -11,15 +11,27 @@ export class Pen extends Shape {
   static pointer: string = "crosshair";
   static panel: ShapePanelConfiguration = { ...Shape.panel, background: false };
 
-  points: Point[];
-
   constructor(config: ShapeConfiguration) {
     super(config);
-    this.points = [];
   }
 
-  move(e: MouseEvent<HTMLCanvasElement>): void {
-    this.points.push($xy(e));
+  static onMouseMove({ e, shape }: EventModifier): void {
+    if (!shape.current) return;
+
+    if (e.shiftKey) {
+      // TODO: Implement shift behavior
+      shape.current.points.push($xy(e));
+    } else {
+      shape.current.points.push($xy(e));
+    }
+  }
+
+  boundedRectangle(): BondedRectangle | null {
+    if (this.points.length < 2) return null;
+    
+    const topLeft = { x: Math.min(...this.points.map((p) => p.x)), y: Math.min(...this.points.map((p) => p.y)) }
+    const bottomRight = { x: Math.max(...this.points.map((p) => p.x)), y: Math.max(...this.points.map((p) => p.y)) }
+    return { topLeft, bottomRight }
   }
 
   draw(ctx: OffscreenCanvasRenderingContext2D): void {
@@ -48,8 +60,11 @@ export class Pen extends Shape {
     ctx.stroke();
   }
 
-  translate(dX: number, dY: number): void {
-    this.points = this.points.map((p) => ({ x: p.x + dX, y: p.y + dY }));
+  translate(delta: Point): void {
+    this.points = this.points.map((p) => ({
+      x: p.x + delta.x,
+      y: p.y + delta.y,
+    }));
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>): boolean {
@@ -76,5 +91,9 @@ export class Pen extends Shape {
     }
 
     return false;
+  }
+
+  isEmpty(): boolean {
+    return this.points.length === 0;
   }
 }
