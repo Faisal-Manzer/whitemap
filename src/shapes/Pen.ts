@@ -3,7 +3,12 @@ import { PencilLine } from "lucide-react";
 
 import { EventModifier, Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
-import { BondedRectangle, Point, ShapeConfiguration, ShapePanelConfiguration } from "../types";
+import {
+  BondedRectangle,
+  Point,
+  ShapeConfiguration,
+  ShapePanelConfiguration,
+} from "../types";
 
 export class Pen extends Shape {
   static name: string = "Pen";
@@ -28,10 +33,16 @@ export class Pen extends Shape {
 
   boundedRectangle(): BondedRectangle | null {
     if (this.points.length < 2) return null;
-    
-    const topLeft = { x: Math.min(...this.points.map((p) => p.x)), y: Math.min(...this.points.map((p) => p.y)) }
-    const bottomRight = { x: Math.max(...this.points.map((p) => p.x)), y: Math.max(...this.points.map((p) => p.y)) }
-    return { topLeft, bottomRight }
+
+    const topLeft = {
+      x: Math.min(...this.points.map((p) => p.x)),
+      y: Math.min(...this.points.map((p) => p.y)),
+    };
+    const bottomRight = {
+      x: Math.max(...this.points.map((p) => p.x)),
+      y: Math.max(...this.points.map((p) => p.y)),
+    };
+    return { topLeft, bottomRight };
   }
 
   draw(ctx: OffscreenCanvasRenderingContext2D): void {

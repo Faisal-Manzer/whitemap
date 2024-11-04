@@ -1,14 +1,23 @@
-import { MouseEvent, MutableRefObject } from "react";
+import { MouseEvent } from "react";
 import { Square } from "lucide-react";
 
 import { EventModifier, Shape } from "./Shape";
 import { $xy } from "../utils/coordinate";
-import { BondedRectangle, Point, ShapeConfiguration } from "../types";
+import {
+  BondedRectangle,
+  Point,
+  ShapeConfiguration,
+  ShapePanelConfiguration,
+} from "../types";
 
 export class Rectangle extends Shape {
   static name: string = "Rectangle";
   static icon = Square;
   static pointer: string = "crosshair";
+  static panel: ShapePanelConfiguration = {
+    ...Shape.panel,
+    edge: true,
+  };
 
   constructor(config: ShapeConfiguration) {
     super(config);
@@ -33,11 +42,13 @@ export class Rectangle extends Shape {
   boundedRectangle(): BondedRectangle | null {
     if (!this.start || !this.end) return null;
 
-    if (this.start.x > this.end.x && this.start.y > this.end.y ) return {
-      topLeft: this.end,
-      bottomRight: this.start,
+    if (this.start.x > this.end.x && this.start.y > this.end.y) {
+      return {
+        topLeft: this.end,
+        bottomRight: this.start,
+      };
     }
-    
+
     return {
       topLeft: this.start,
       bottomRight: this.end,
@@ -48,11 +59,12 @@ export class Rectangle extends Shape {
     if (!this.start || !this.end) return;
 
     this.configure(ctx);
-    ctx.rect(
+    ctx.roundRect(
       this.start.x,
       this.start.y,
       this.end.x - this.start.x,
       this.end.y - this.start.y,
+      this.config.edge === "rounded" ? 10 : 0,
     );
 
     ctx.fill();
@@ -76,7 +88,7 @@ export class Rectangle extends Shape {
     return (this.start.x <= e.clientX && e.clientX <= this.end.x &&
       this.start.y <= e.clientY && e.clientY <= this.end.y) || (
         this.end.x <= e.clientX && e.clientX <= this.start.x &&
-      this.end.y <= e.clientY && e.clientY <= this.start.y
+        this.end.y <= e.clientY && e.clientY <= this.start.y
       );
   }
 

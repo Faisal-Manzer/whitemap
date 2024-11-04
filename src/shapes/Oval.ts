@@ -3,12 +3,16 @@ import { Circle } from "lucide-react";
 
 import { Rectangle } from "./Rectangle";
 
-import { ShapeConfiguration } from "../types";
+import { ShapeConfiguration, ShapePanelConfiguration } from "../types";
 
 export class Oval extends Rectangle {
   static name: string = "Oval";
   static icon = Circle;
   static pointer: string = "crosshair";
+  static panel: ShapePanelConfiguration = {
+    ...Rectangle.panel,
+    edge: false,
+  };
 
   constructor(config: ShapeConfiguration) {
     super(config);

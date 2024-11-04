@@ -5,9 +5,12 @@ export interface Point {
 
 export interface ShapePanelConfiguration {
   noPanel?: boolean;
+
   border?: boolean;
+  borderWidth?: boolean;
+
   background?: boolean;
-  borderWidth?: number;
+  edge?: boolean;
 }
 
 export interface ShapeConfiguration {
@@ -15,6 +18,7 @@ export interface ShapeConfiguration {
   borderWidth: number;
 
   background: string;
+  edge: "rounded" | "pointy";
 }
 
 export interface BondedRectangle {

@@ -1,22 +1,24 @@
 import {
   forwardRef,
-  PropsWithChildren,
-  useImperativeHandle,
-  useState,
   MutableRefObject,
+  PropsWithChildren,
   useEffect,
+  useImperativeHandle,
   useMemo,
+  useState,
 } from "react";
 import { Shape } from "../../shapes";
 import { ShapeConfiguration } from "../../types";
 import { ColorSelector } from "../atoms/ColorSelector";
 import { PanelElement } from "../atoms/PanelElement";
 import { ElementSelector } from "../atoms/ElementSelector";
-import { Minus } from "lucide-react";
+import { Circle, Copy, Minus, Square, Trash } from "lucide-react";
 
 export interface ShapePanelProps extends PropsWithChildren {
   shape: typeof Shape;
   drawing: MutableRefObject<Shape | null>;
+  layers: MutableRefObject<Shape[]>;
+  attach: () => void;
 }
 
 export interface ShapePanelRef {
@@ -34,21 +36,24 @@ const BACKGROUND_COLORS = [
 const BORDER_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
 
 export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
-  ({ shape, drawing, children }, ref) => {
+  ({ shape, drawing, layers, attach, children }, ref) => {
     const initialConfig = drawing.current?.config;
-    const [background, setBackground] = useState(
-      initialConfig?.background || BACKGROUND_COLORS[0]
-    );
-    const [border, setBorder] = useState(
+    const [background, setBackground] = useState<
+      ShapeConfiguration["background"]
+    >(initialConfig?.background || BACKGROUND_COLORS[0]);
+    const [border, setBorder] = useState<ShapeConfiguration["border"]>(
       initialConfig?.border || BORDER_COLORS[0]
     );
-    const [borderWidth, setBorderWidth] = useState(
-      initialConfig?.borderWidth || 1
+    const [borderWidth, setBorderWidth] = useState<
+      ShapeConfiguration["borderWidth"]
+    >(initialConfig?.borderWidth || 1);
+    const [edge, setEdge] = useState<ShapeConfiguration["edge"]>(
+      initialConfig?.edge || "rounded"
     );
 
     const config: ShapeConfiguration = useMemo(
-      () => ({ border, background, borderWidth }),
-      [border, background, borderWidth]
+      () => ({ border, background, borderWidth, edge }),
+      [border, background, borderWidth, edge]
     );
 
     useImperativeHandle(ref, () => ({
@@ -111,6 +116,61 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
                 select={() => setBorderWidth(5)}
               >
                 <Minus strokeWidth={5} size={12} />
+              </ElementSelector>
+            </PanelElement>
+
+            <PanelElement title="Border Radius" show={panel.edge}>
+              <ElementSelector
+                isSelected={edge === "rounded"}
+                select={() => setEdge("rounded")}
+              >
+                <Circle strokeWidth={1} size={12} />
+              </ElementSelector>
+
+              <ElementSelector
+                isSelected={edge === "pointy"}
+                select={() => setEdge("pointy")}
+              >
+                <Square strokeWidth={1} size={12} />
+              </ElementSelector>
+            </PanelElement>
+
+            <PanelElement
+              title="Actions"
+              show={
+                !!drawing.current &&
+                drawing.current.isSelected &&
+                drawing.current.isAttached
+              }
+            >
+              <ElementSelector
+                isSelected
+                select={() => {
+                  layers.current = layers.current.filter(
+                    (s) => s.id !== drawing.current?.id
+                  );
+                  drawing.current = null;
+                }}
+              >
+                <Trash strokeWidth={1} size={12} />
+              </ElementSelector>
+
+              <ElementSelector
+                isSelected
+                select={() => {
+                  if (drawing.current) {
+                    drawing.current.isSelected = false;
+                    layers.current = layers.current.map((s) => {
+                      s.isSelected = false;
+                      return s;
+                    });
+
+                    drawing.current = drawing.current.duplicate();
+                    attach();
+                  }
+                }}
+              >
+                <Copy strokeWidth={1} size={12} />
               </ElementSelector>
             </PanelElement>
           </div>

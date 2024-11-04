@@ -20,7 +20,7 @@ function App() {
 
   const [mode, setMode] = useState<"draw" | "select">("draw");
   const [activeToolName, setActiveToolName] = useState<keyof typeof Tools>(
-    Pen.name
+    Pen.name,
   );
   const activeTool = Tools[activeToolName];
 
@@ -62,18 +62,18 @@ function App() {
       layersRef.current.push(drawingRef.current);
     }
 
-    drawOnRealCanvas();
-
     drawingRef.current = null;
-  }, [drawOnRealCanvas]);
+  }, []);
 
   const runEvent = useCallback(
     (
       name: "onMouseUp" | "onMouseMove" | "onMouseDown",
-      ref: MutableRefObject<MouseEvent<
-        HTMLCanvasElement,
-        globalThis.MouseEvent
-      > | null>
+      ref: MutableRefObject<
+        MouseEvent<
+          HTMLCanvasElement,
+          globalThis.MouseEvent
+        > | null
+      >,
     ) => {
       if (!panelRef.current) return;
 
@@ -87,7 +87,7 @@ function App() {
         ref.current = null;
       }
     },
-    [activeTool, attach]
+    [activeTool, attach],
   );
 
   const registerEvent =
@@ -122,15 +122,14 @@ function App() {
         // onMouseMoveRef.current = null;
       }
 
-      const isClicked =
-        onMouseDownRef.current &&
+      const isClicked = onMouseDownRef.current &&
         onMouseUpRef.current &&
         Math.abs(
-          onMouseDownRef.current.clientX - onMouseUpRef.current.clientX
-        ) <= 5 &&
+            onMouseDownRef.current.clientX - onMouseUpRef.current.clientX,
+          ) <= 5 &&
         Math.abs(
-          onMouseDownRef.current.clientY - onMouseUpRef.current.clientY
-        ) <= 5;
+            onMouseDownRef.current.clientY - onMouseUpRef.current.clientY,
+          ) <= 5;
 
       if (isClicked) {
         if (drawingRef.current) {
@@ -173,8 +172,6 @@ function App() {
     };
 
     setup(realCanvasRef);
-    drawOnRealCanvas();
-
     loop();
 
     return () => {
@@ -189,6 +186,8 @@ function App() {
         shape={activeTool}
         key={activeToolName + (drawingRef.current?.id || "none")}
         drawing={drawingRef}
+        layers={layersRef}
+        attach={attach}
       >
         <PanelElement title="Tools" show>
           {Object.keys(Tools).map((tool) => {

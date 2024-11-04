@@ -30,7 +30,8 @@ export class Shape {
     noPanel: false,
     background: true,
     border: true,
-    borderWidth: 3,
+    borderWidth: true,
+    edge: false,
   };
 
   start: Point | null;
@@ -52,7 +53,7 @@ export class Shape {
     }
   }
 
-  static onMouseMove( { e, shape }: EventModifier): void {
+  static onMouseMove({ e, shape }: EventModifier): void {
     console.log("[Shape:onMouseMove] Not Implemented", e, shape);
   }
 
@@ -89,5 +90,25 @@ export class Shape {
 
   isEmpty() {
     return true;
+  }
+
+  duplicate() {
+    const clone = Object.assign(
+      Object.create(Object.getPrototypeOf(this)),
+      this,
+    );
+    clone.id = $ID();
+    clone.isSelected = false;
+    clone.isAttached = false;
+
+    if (this.start) {
+      clone.start = { x: this.start.x + 20, y: this.start.y + 20 };
+    }
+    if (this.end) {
+      clone.end = { x: this.end.x + 20, y: this.end.y + 20 };
+    }
+
+    clone.points = this.points.map((p) => ({ x: p.x + 20, y: p.y + 20 }));
+    return clone;
   }
 }

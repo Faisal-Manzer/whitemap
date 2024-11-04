@@ -38,7 +38,10 @@ export const draw = (
   canvasCtx.drawImage(offScreenCanvas, 0, 0);
 };
 
-export const drawBoundingBox = (ctx: OffscreenCanvasRenderingContext2D, rect: BondedRectangle | null) => {
+export const drawBoundingBox = (
+  ctx: OffscreenCanvasRenderingContext2D,
+  rect: BondedRectangle | null,
+) => {
   if (!rect) return;
 
   ctx.beginPath();
@@ -50,9 +53,9 @@ export const drawBoundingBox = (ctx: OffscreenCanvasRenderingContext2D, rect: Bo
     rect.topLeft.x - 10,
     rect.topLeft.y - 10,
     rect.bottomRight.x - rect.topLeft.x + 20,
-    rect.bottomRight.y - rect.topLeft.y + 20
+    rect.bottomRight.y - rect.topLeft.y + 20,
   );
 
   ctx.stroke();
   ctx.setLineDash([]);
-}
+};
