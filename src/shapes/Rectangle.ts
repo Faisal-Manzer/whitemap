@@ -33,8 +33,21 @@ export class Rectangle extends Shape {
     if (shape.current.start === null) {
       shape.current.start = $xy(e);
     } else if (e.shiftKey) {
-      // TODO: Implement shift behavior
-      shape.current.end = $xy(e);
+      const point = $xy(e);
+
+      const height = Math.abs(point.y - shape.current.start.y);
+      const width = Math.abs(point.x - shape.current.start.x);
+
+      const multiplierX = point.x > shape.current.start.x ? 1 : -1;
+      const multiplierY = point.y > shape.current.start.y ? 1 : -1;
+
+      const l = Math.max(height, width);
+      const newPoint = {
+        x: shape.current.start.x + l * multiplierX,
+        y: shape.current.start.y + l * multiplierY,
+      };
+
+      shape.current.end = newPoint;
     } else {
       shape.current.end = $xy(e);
     }

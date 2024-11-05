@@ -14,6 +14,7 @@
     "npm:lucide-react@0.454": "0.454.0_react@18.3.1",
     "npm:postcss@^8.4.47": "8.4.47",
     "npm:react-dom@^18.3.1": "18.3.1_react@18.3.1",
+    "npm:react-hotkeys-hook@^4.6.1": "4.6.1_react@18.3.1_react-dom@18.3.1__react@18.3.1",
     "npm:react@^18.3.1": "18.3.1",
     "npm:tailwind-merge@^2.5.4": "2.5.4",
     "npm:tailwindcss@^3.4.14": "3.4.14_postcss@8.4.47",
@@ -1284,6 +1285,13 @@
         "scheduler"
       ]
     },
+    "react-hotkeys-hook@4.6.1_react@18.3.1_react-dom@18.3.1__react@18.3.1": {
+      "integrity": "sha512-XlZpbKUj9tkfgPgT9gA+1p7Ey6vFIZHttUjPqpTdyT5nqQ8mHL7elxvSbaC+dpSiHUSmr21Ya1mDxBZG3aje4Q==",
+      "dependencies": [
+        "react",
+        "react-dom"
+      ]
+    },
     "react-refresh@0.14.2": {
       "integrity": "sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA=="
     },
@@ -1583,6 +1591,7 @@
         "npm:lucide-react@0.454",
         "npm:postcss@^8.4.47",
         "npm:react-dom@^18.3.1",
+        "npm:react-hotkeys-hook@^4.6.1",
         "npm:react@^18.3.1",
         "npm:tailwind-merge@^2.5.4",
         "npm:tailwindcss@^3.4.14",

@@ -24,8 +24,16 @@ export class Pen extends Shape {
     if (!shape.current) return;
 
     if (e.shiftKey) {
-      // TODO: Implement shift behavior
-      shape.current.points.push($xy(e));
+      const point = $xy(e);
+      if (shape.current.points.length) {
+        const start = shape.current.points[0];
+
+        if (Math.abs(start.x - point.x) > Math.abs(start.y - point.y)) {
+          shape.current.points = [start, { x: point.x, y: start.y }];
+        } else {
+          shape.current.points = [start, { x: start.x, y: point.y }];
+        }
+      } else shape.current.points.push(point);
     } else {
       shape.current.points.push($xy(e));
     }

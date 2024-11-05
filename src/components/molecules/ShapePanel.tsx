@@ -62,7 +62,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
       children,
       updateConfig,
     },
-    ref
+    ref,
   ) => {
     const current = selected || drawing.current;
     const initialConfig = current?.config;
@@ -74,7 +74,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     >(initialConfig?.background || BACKGROUND_COLORS[0]);
 
     const [border, setBorder] = useState<ShapeConfiguration["border"]>(
-      initialConfig?.border || BORDER_COLORS[0]
+      initialConfig?.border || BORDER_COLORS[0],
     );
 
     const [borderWidth, setBorderWidth] = useState<
@@ -82,11 +82,11 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     >(initialConfig?.borderWidth || 1);
 
     const [edge, setEdge] = useState<ShapeConfiguration["edge"]>(
-      initialConfig?.edge || "rounded"
+      initialConfig?.edge || "rounded",
     );
 
     const [fontColor, setFontColor] = useState<ShapeConfiguration["fontColor"]>(
-      initialConfig?.fontColor || FONT_COLORS[0]
+      initialConfig?.fontColor || FONT_COLORS[0],
     );
 
     const config: ShapeConfiguration = useMemo(
@@ -98,7 +98,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         fontColor,
         fontSize: 24,
       }),
-      [border, background, borderWidth, edge, fontColor]
+      [border, background, borderWidth, edge, fontColor],
     );
 
     useImperativeHandle(ref, () => ({
@@ -207,5 +207,5 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         )}
       </div>
     );
-  }
+  },
 );

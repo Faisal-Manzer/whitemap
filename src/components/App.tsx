@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 
+import { useHotkeys } from "react-hotkeys-hook";
 import { Pen, Shape, Tools } from "../shapes";
 import { ShapePanel, ShapePanelRef } from "./molecules/ShapePanel";
 import { $box } from "../utils/coordinate";
@@ -22,7 +23,7 @@ function App() {
 
   const [mode, setMode] = useState<"draw" | "select">("draw");
   const [activeToolName, setActiveToolName] = useState<keyof typeof Tools>(
-    Pen.name
+    Pen.name,
   );
   const activeTool = Tools[activeToolName];
 
@@ -72,7 +73,7 @@ function App() {
       resetMouse();
       if (setTool) setActiveToolName(shape.constructor.name);
     },
-    [resetMouse]
+    [resetMouse],
   );
 
   const deselectAll = useCallback(() => {
@@ -104,14 +105,15 @@ function App() {
         selectShape(shape);
       }
     },
-    [selectShape]
+    [selectShape],
   );
 
   const attach = useCallback(() => {
     if (!drawingRef.current) return;
-    attachShape(drawingRef.current);
-
+    const shape = drawingRef.current;
     drawingRef.current = null;
+
+    attachShape(shape);
   }, [attachShape]);
 
   const deleteSelected = useCallback(() => {
@@ -119,7 +121,11 @@ function App() {
 
     drawingRef.current = null;
     deselectAll();
-  }, [deselectAll, selected]);
+
+    if (layersRef.current.length > 0) {
+      selectShape(layersRef.current[layersRef.current.length - 1]);
+    }
+  }, [deselectAll, selected, selectShape]);
 
   const duplicateShape = useCallback(() => {
     if (drawingRef.current) {
@@ -129,7 +135,8 @@ function App() {
         return s;
       });
 
-      drawingRef.current = selected?.duplicate();
+      const shape = selected?.duplicate();
+      drawingRef.current = shape;
       attach();
     }
   }, [selected, attach]);
@@ -139,16 +146,18 @@ function App() {
       if (selected) selected.config = config;
       if (drawingRef.current) drawingRef.current.config = config;
     },
-    [selected]
+    [selected],
   );
 
   const runEvent = useCallback(
     (
       name: "onMouseUp" | "onMouseMove" | "onMouseDown" | "onClick",
-      ref: MutableRefObject<MouseEvent<
-        HTMLCanvasElement,
-        globalThis.MouseEvent
-      > | null>
+      ref: MutableRefObject<
+        MouseEvent<
+          HTMLCanvasElement,
+          globalThis.MouseEvent
+        > | null
+      >,
     ) => {
       const canvas = realCanvasRef.current;
       if (!panelRef.current || !canvas) return;
@@ -166,7 +175,7 @@ function App() {
         // ref.current = null;
       }
     },
-    [activeTool, attach, attachShape, selectShape]
+    [activeTool, attach, attachShape, selectShape],
   );
 
   const registerEvent =
@@ -185,7 +194,6 @@ function App() {
     const loop = () => {
       loopId = requestAnimationFrame(loop);
 
-      // console.log(layersRef.current);
       const canvas = realCanvasRef.current;
       if (!canvas) return;
 
@@ -201,12 +209,11 @@ function App() {
       );
 
       if ($click(mouse)) {
-        console.log("ci");
         const isSelectedClicked = hoveredElements.some(
           (s) =>
             onMouseUpRef.current &&
             s.id === selected?.id &&
-            s.isHovered(onMouseUpRef.current)
+            s.isHovered(onMouseUpRef.current),
         );
 
         const wasSelected = !!selected;
@@ -265,6 +272,43 @@ function App() {
     deselectAll,
     translateSelected,
   ]);
+
+  useHotkeys("r", () => {
+    deselectAll();
+    setActiveToolName("Rectangle");
+  });
+
+  useHotkeys("o", () => {
+    deselectAll();
+    setActiveToolName("Oval");
+  });
+
+  useHotkeys("p", () => {
+    deselectAll();
+    setActiveToolName("Pen");
+  });
+
+  useHotkeys("t", () => {
+    deselectAll();
+    setActiveToolName("Text");
+  });
+
+  useHotkeys("s", () => {
+    deselectAll();
+    setActiveToolName("Pointer");
+  });
+
+  useHotkeys("esc", () => {
+    deselectAll();
+  });
+
+  useHotkeys(["backspace", "del"], () => {
+    deleteSelected();
+  });
+
+  useHotkeys("d", () => {
+    duplicateShape();
+  });
 
   return (
     <>

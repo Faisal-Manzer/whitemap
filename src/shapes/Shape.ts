@@ -10,7 +10,7 @@ import {
 } from "../types";
 
 export interface EventModifier<T = Shape> {
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement;
   e: MouseEvent<HTMLCanvasElement>;
   shape: MutableRefObject<T | null>;
   config: ShapeConfiguration;
@@ -21,7 +21,7 @@ export interface EventModifier<T = Shape> {
 
 export class Shape {
   id: string;
-  
+
   isAttached = false;
   isSelected = false;
   isEditing = false;
