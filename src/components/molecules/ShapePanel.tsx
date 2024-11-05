@@ -26,15 +26,25 @@ export interface ShapePanelRef {
   getConfig: () => ShapeConfiguration;
 }
 
+// const BACKGROUND_COLORS = [
+// "#d1d5db",
+// "#93c5fd",
+// "#86efac",
+// "#fde047",
+// "#fca5a5",
+// ];
+
+// const BORDER_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
+
 const BACKGROUND_COLORS = [
-  "#d1d5db",
-  "#93c5fd",
-  "#86efac",
-  "#fde047",
-  "#fca5a5",
+  "#f3f4f6",
+  "#dbeafe",
+  "#dcfce7",
+  "#fef9c3",
+  "#ffe4e6",
 ];
 
-const BORDER_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
+const BORDER_COLORS = ["#6b7280", "#3b82f6", "#22c55e", "#eab308", "#f43f5e"];
 
 type ShapeConstructor = typeof Shape | undefined | null;
 export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
@@ -85,6 +95,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
             <PanelElement title="Background" show={panel.background}>
               {BACKGROUND_COLORS.map((color) => (
                 <ColorSelector
+                  key={color}
                   color={color}
                   select={() => setBackground(color)}
                   isSelected={background === color}
@@ -95,6 +106,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
             <PanelElement title="Border" show={panel.border}>
               {BORDER_COLORS.map((color) => (
                 <ColorSelector
+                  key={color}
                   color={color}
                   select={() => setBorder(color)}
                   isSelected={border === color}
@@ -146,7 +158,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
               show={!!current && current.isSelected && current.isAttached}
             >
               <ElementSelector
-                isSelected
+                isSelected={false}
                 select={() => {
                   layers.current = layers.current.filter(
                     (s) => s.id !== current?.id
@@ -154,11 +166,11 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
                   drawing.current = null;
                 }}
               >
-                <Trash strokeWidth={1} size={12} />
+                <Trash strokeWidth={1.5} size={16} />
               </ElementSelector>
 
               <ElementSelector
-                isSelected
+                isSelected={false}
                 select={() => {
                   if (current) {
                     current.isSelected = false;
@@ -172,7 +184,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
                   }
                 }}
               >
-                <Copy strokeWidth={1} size={12} />
+                <Copy strokeWidth={1.5} size={16} />
               </ElementSelector>
             </PanelElement>
           </div>

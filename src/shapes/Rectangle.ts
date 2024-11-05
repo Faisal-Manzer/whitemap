@@ -14,7 +14,7 @@ import { isInsideBoundedRect } from "../utils/mouse";
 export class Rectangle extends Shape {
   static name: string = "Rectangle";
   static icon = Square;
-  static pointer: string = "crosshair";
+  static cursor: string = "crosshair";
   static panel: ShapePanelConfiguration = {
     ...Shape.panel,
     edge: true,
@@ -43,21 +43,20 @@ export class Rectangle extends Shape {
   boundedRectangle(): BondedRectangle | null {
     if (!this.start || !this.end) return null;
 
-    if (this.start.x > this.end.x && this.start.y > this.end.y) {
-      return {
-        topLeft: this.end,
-        bottomRight: this.start,
-      };
-    }
-
     return {
-      topLeft: this.start,
-      bottomRight: this.end,
+      topLeft: {
+        x: Math.min(this.start.x, this.end.x),
+        y: Math.min(this.start.y, this.end.y),
+      },
+      bottomRight: {
+        x: Math.max(this.start.x, this.end.x),
+        y: Math.max(this.start.y, this.end.y),
+      },
     };
   }
 
-  draw(ctx: OffscreenCanvasRenderingContext2D): void {
-    if (!this.start || !this.end) return;
+  draw(ctx: OffscreenCanvasRenderingContext2D) {
+    if (!this.start || !this.end) return this;
 
     this.configure(ctx);
     ctx.roundRect(
@@ -70,9 +69,11 @@ export class Rectangle extends Shape {
 
     ctx.fill();
     ctx.stroke();
+
+    return this;
   }
 
-  translate(delta: Point): void {
+  translate(delta: Point) {
     if (this.start) {
       this.start.x += delta.x;
       this.start.y += delta.y;
@@ -82,12 +83,14 @@ export class Rectangle extends Shape {
       this.end.x += delta.x;
       this.end.y += delta.y;
     }
+
+    return this;
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>) {
     return isInsideBoundedRect(
       e,
-      this.boundedRectangle()
+      this.boundedRectangle(),
     );
   }
 

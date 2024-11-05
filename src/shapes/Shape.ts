@@ -9,17 +9,22 @@ import {
   ShapePanelConfiguration,
 } from "../types";
 
-export interface EventModifier {
+export interface EventModifier<T = Shape> {
+  canvas: HTMLCanvasElement,
   e: MouseEvent<HTMLCanvasElement>;
-  shape: MutableRefObject<Shape | null>;
+  shape: MutableRefObject<T | null>;
   config: ShapeConfiguration;
   attach: () => void;
+  attachShape: (shape: Shape) => void;
 }
 
 export class Shape {
   id: string;
-  isSelected = false;
+  
   isAttached = false;
+  isSelected = false;
+  isEditing = false;
+
   drawingOnly = false;
   config: ShapeConfiguration;
 
@@ -37,6 +42,7 @@ export class Shape {
   start: Point | null;
   end: Point | null;
   points: Point[];
+  element: HTMLDivElement | null;
 
   constructor(config: ShapeConfiguration) {
     this.id = $ID();
@@ -45,6 +51,7 @@ export class Shape {
     this.start = null;
     this.end = null;
     this.points = [];
+    this.element = null;
   }
 
   static onMouseDown({ shape, config }: EventModifier): void {
@@ -53,38 +60,60 @@ export class Shape {
     }
   }
 
-  static onMouseMove({ e, shape }: EventModifier): void {
-    console.log("[Shape:onMouseMove] Not Implemented", e, shape);
+  static onMouseMove({ attach }: EventModifier): void {
   }
 
   static onMouseUp({ attach }: EventModifier): void {
     attach();
   }
 
+  static onClick({ attach }: EventModifier): void {
+  }
+
   boundedRectangle(): BondedRectangle | null {
-    console.log("[Shape:boundedRectangle] Not Implemented");
     return null;
   }
 
-  draw(ctx: OffscreenCanvasRenderingContext2D) {
-    console.log("[Shape:draw] Not Implemented", ctx);
+  draw(ctx: OffscreenCanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+    return this;
   }
 
   translate(delta: Point) {
-    console.log("[Shape:translate] Not Implemented", delta);
+    return this;
   }
 
-  configure(ctx: OffscreenCanvasRenderingContext2D) {
+  select() {
+    this.isSelected = true;
+    return this;
+  }
+
+  deselect() {
+    this.isSelected = false;
+    return this;
+  }
+
+  attach() {
+    this.isAttached = true;
+    return this;
+  }
+
+  edit() {
+    this.isEditing = true;
+    return this;
+  }
+
+  configure(ctx: OffscreenCanvasRenderingContext2D): typeof this {
     ctx.beginPath();
 
     ctx.lineCap = "round";
     ctx.strokeStyle = this.config.border;
     ctx.fillStyle = this.config.background;
     ctx.lineWidth = this.config.borderWidth;
+
+    return this;
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>) {
-    console.log("[Shape:isHovered] Not Implemented", e);
     return false;
   }
 

@@ -39,21 +39,21 @@ function App() {
     draw(realCanvasRef, (ctx) => {
       for (const shape of layersRef.current) {
         if (shape.isAttached) {
-          shape.draw(ctx);
+          shape.draw(ctx, realCanvasRef.current!);
         }
       }
 
       if (drawingRef.current && !drawingRef.current.isAttached) {
-        drawingRef.current.draw(ctx);
+        drawingRef.current.draw(ctx, realCanvasRef.current!);
       }
 
       for (const shape of layersRef.current) {
-        if (shape.isSelected) {
+        if (shape.isSelected && mode === "select") {
           drawBoundingBox(ctx, shape.boundedRectangle());
         }
       }
     });
-  }, []);
+  }, [mode]);
 
   const resetMouse = useCallback(() => {
     onMouseDownRef.current = null;
@@ -62,7 +62,7 @@ function App() {
   }, []);
 
   const selectShape = useCallback((shape: Shape, setTool = true) => {
-    shape.isSelected = true;
+    shape.select();
     drawingRef.current = shape;
 
     setMode("select");
@@ -72,10 +72,7 @@ function App() {
 
   const deselectAll = useCallback(() => {
     drawingRef.current = null;
-    layersRef.current = layersRef.current.map((s) => {
-      s.isSelected = false;
-      return s;
-    });
+    layersRef.current = layersRef.current.map((s) => s.deselect());
 
     setMode("draw");
     setSelected(null);
@@ -92,42 +89,51 @@ function App() {
     }
   }, []);
 
+  const attachShape = useCallback(
+    (shape: Shape) => {
+      if (!shape) return;
+      if (!shape.isAttached && !shape.isEmpty() && !shape.drawingOnly) {
+        shape.attach();
+        layersRef.current.push(shape);
+
+        selectShape(shape);
+        setMode("select");
+      }
+    },
+    [selectShape]
+  );
+
   const attach = useCallback(() => {
     if (!drawingRef.current) return;
-    if (drawingRef.current.isEmpty()) return;
-    if (drawingRef.current.drawingOnly) return;
-
-    if (!drawingRef.current.isAttached) {
-      drawingRef.current.isAttached = true;
-      layersRef.current.push(drawingRef.current);
-
-      selectShape(drawingRef.current);
-    }
+    attachShape(drawingRef.current);
 
     drawingRef.current = null;
-  }, [selectShape]);
+  }, [attachShape]);
 
   const runEvent = useCallback(
     (
-      name: "onMouseUp" | "onMouseMove" | "onMouseDown",
+      name: "onMouseUp" | "onMouseMove" | "onMouseDown" | "onClick",
       ref: MutableRefObject<MouseEvent<
         HTMLCanvasElement,
         globalThis.MouseEvent
       > | null>
     ) => {
-      if (!panelRef.current) return;
+      const canvas = realCanvasRef.current;
+      if (!panelRef.current || !canvas) return;
 
       if (ref.current) {
         activeTool[name]({
+          canvas,
           e: ref.current,
           shape: drawingRef,
           config: panelRef.current.getConfig(),
           attach,
+          attachShape,
         });
-        ref.current = null;
+        // ref.current = null;
       }
     },
-    [activeTool, attach]
+    [activeTool, attach, attachShape]
   );
 
   const registerEvent =
@@ -143,6 +149,11 @@ function App() {
     let loopId: number;
     const loop = () => {
       loopId = requestAnimationFrame(loop);
+
+      // console.log(layersRef.current);
+      const canvas = realCanvasRef.current;
+      if (!canvas) return;
+
       const mouse = {
         onMouseDownRef,
         onMouseMoveRef,
@@ -150,24 +161,37 @@ function App() {
         prevMouseMoveRef,
       };
 
+      const hoveredElements = layersRef.current.filter((s) =>
+        onMouseMoveRef.current ? s.isHovered(onMouseMoveRef.current) : false
+      );
+
       if ($click(mouse)) {
-        const hoveredElements = layersRef.current.filter((s) =>
-          onMouseUpRef.current ? s.isHovered(onMouseUpRef.current) : false
+        const isSelectedClicked = hoveredElements.some(
+          (s) =>
+            onMouseUpRef.current &&
+            s.id === selected?.id &&
+            s.isHovered(onMouseUpRef.current)
         );
 
+        const wasSelected = !!selected;
         deselectAll();
         if (hoveredElements.length > 0) {
           selectShape(hoveredElements[hoveredElements.length - 1]);
+          if (isSelectedClicked) selected?.edit();
+        } else {
+          if (!wasSelected) runEvent("onClick", onMouseUpRef);
         }
 
         return resetMouse();
       }
 
-      if (mode === "select" && $drag(mouse)) {
-        for (const layer of layersRef.current) {
-          if (layer.isSelected) {
-            translateSelected();
-            break;
+      if (mode === "select") {
+        if ($drag(mouse)) {
+          for (const layer of layersRef.current) {
+            if (layer.isSelected) {
+              translateSelected();
+              break;
+            }
           }
         }
       }
@@ -177,6 +201,10 @@ function App() {
         runEvent("onMouseMove", onMouseMoveRef);
         runEvent("onMouseUp", onMouseUpRef);
       }
+
+      if (hoveredElements.length > 0) canvas.style.cursor = "pointer";
+      else if (selected) canvas.style.cursor = "move";
+      else canvas.style.cursor = activeTool.cursor;
 
       drawOnRealCanvas();
     };
@@ -188,11 +216,13 @@ function App() {
       cancelAnimationFrame(loopId);
     };
   }, [
+    activeTool,
     activeToolName,
     runEvent,
     drawOnRealCanvas,
     mode,
     attach,
+    selected,
     selectShape,
     resetMouse,
     deselectAll,
@@ -200,10 +230,10 @@ function App() {
   ]);
 
   return (
-    <div>
+    <>
       <ShapePanel
         ref={panelRef}
-        shape={activeTool}
+        shape={activeTool as unknown as typeof Shape}
         selected={selected}
         drawing={drawingRef}
         layers={layersRef}
@@ -218,6 +248,7 @@ function App() {
 
             return (
               <ElementSelector
+                key={tool}
                 isSelected={isSelected}
                 select={() => {
                   resetMouse();
@@ -227,7 +258,7 @@ function App() {
               >
                 <Icon
                   size={16}
-                  strokeWidth={1.5}
+                  strokeWidth={3}
                   fill={isSelected ? "#000" : "#FFF"}
                 />
               </ElementSelector>
@@ -246,7 +277,7 @@ function App() {
         }}
         onMouseUp={registerEvent(onMouseUpRef)}
       />
-    </div>
+    </>
   );
 }
 

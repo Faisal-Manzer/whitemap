@@ -8,7 +8,7 @@ import { ShapeConfiguration, ShapePanelConfiguration } from "../types";
 export class Oval extends Rectangle {
   static name: string = "Oval";
   static icon = Circle;
-  static pointer: string = "crosshair";
+  static cursor: string = "crosshair";
   static panel: ShapePanelConfiguration = {
     ...Rectangle.panel,
     edge: false,
@@ -18,8 +18,8 @@ export class Oval extends Rectangle {
     super(config);
   }
 
-  draw(ctx: OffscreenCanvasRenderingContext2D): void {
-    if (!this.start || !this.end) return;
+  draw(ctx: OffscreenCanvasRenderingContext2D): this {
+    if (!this.start || !this.end) return this;
 
     this.configure(ctx);
     ctx.ellipse(
@@ -34,6 +34,8 @@ export class Oval extends Rectangle {
 
     ctx.fill();
     ctx.stroke();
+
+    return this;
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>): boolean {

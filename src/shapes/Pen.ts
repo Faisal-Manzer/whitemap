@@ -13,7 +13,7 @@ import {
 export class Pen extends Shape {
   static name: string = "Pen";
   static icon = PencilLine;
-  static pointer: string = "crosshair";
+  static cursor: string = "crosshair";
   static panel: ShapePanelConfiguration = { ...Shape.panel, background: false };
 
   constructor(config: ShapeConfiguration) {
@@ -45,7 +45,7 @@ export class Pen extends Shape {
     return { topLeft, bottomRight };
   }
 
-  draw(ctx: OffscreenCanvasRenderingContext2D): void {
+  draw(ctx: OffscreenCanvasRenderingContext2D): typeof this {
     const points = this.points;
 
     this.configure(ctx);
@@ -69,13 +69,16 @@ export class Pen extends Shape {
     }
 
     ctx.stroke();
+    return this;
   }
 
-  translate(delta: Point): void {
+  translate(delta: Point): typeof this {
     this.points = this.points.map((p) => ({
       x: p.x + delta.x,
       y: p.y + delta.y,
     }));
+
+    return this;
   }
 
   isHovered(e: MouseEvent<HTMLCanvasElement>): boolean {

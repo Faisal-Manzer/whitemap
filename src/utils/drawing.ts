@@ -48,7 +48,7 @@ export const drawBoundingBox = (
   ctx.lineCap = "round";
   ctx.strokeStyle = "#4c1d95";
   ctx.lineWidth = 2;
-  ctx.setLineDash([5, 10]);
+  ctx.setLineDash([10, 5]);
 
   ctx.rect(
     rect.topLeft.x - 10,

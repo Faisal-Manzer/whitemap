@@ -36,8 +36,11 @@ export const $drag = (params: MouseParas) => {
     !onMouseUpRef.current;
 };
 
-export const isInsideBoundedRect = (e: MouseEvent<HTMLCanvasElement>, rect: BondedRectangle | null) => {
-  if (!rect) return false;
+export const isInsideBoundedRect = (
+  e: MouseEvent<HTMLCanvasElement>,
+  rect: BondedRectangle | null,
+) => {
+  if (!rect || !e) return false;
 
   const { topLeft, bottomRight } = rect;
   return (topLeft.x <= e.clientX && e.clientX <= bottomRight.x &&
