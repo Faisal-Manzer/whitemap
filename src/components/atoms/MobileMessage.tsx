@@ -4,18 +4,19 @@ import { Logo } from "./Logo";
 
 export const MobileMessage = () => {
   return (
-    <div className="top-0 left-0 z-10 fixed flex flex-col md:hidden bg-transparent m-0 p-4 w-screen md:w-0 h-screen md:h-0 text-gray-500 visible">
-      <div className="flex-1"></div>
-      <div>
+    <div className="top-0 left-0 z-10 fixed flex flex-col justify-center items-center md:hidden bg-transparent m-0 p-4 w-screen md:w-0 h-screen md:h-0 text-gray-500 visible">
+      <div className="flex flex-col gap-2">
         <h1 className="text-xl">
-          <Logo />
+          <Logo full />
         </h1>
-        I apologize for any inconvenience this may cause. Currently, this
-        experience is best suited for mouse use, and I truly appreciate your
-        understanding. If possible, it would be wonderful if you could view it
-        on a larger screen for the best experience.
-        <br />
-        Thank you!
+
+        <div>
+          I apologize for any inconvenience this may cause. Currently, this
+          experience is best suited for mouse use, and I truly appreciate your
+          understanding. If possible, it would be wonderful if you could view it
+          on a larger screen for the best experience.
+        </div>
+
         <InfoBox
           Button={({ open }) => (
             <div

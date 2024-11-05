@@ -2,7 +2,7 @@ import { FC, PropsWithChildren } from "react";
 import { cn } from "../../utils/cn";
 
 interface ElementSelectorProps extends PropsWithChildren {
-  isSelected: boolean;
+  isSelected?: boolean;
   select: () => void;
 
   selectedClass?: string;

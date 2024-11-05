@@ -17,6 +17,8 @@ import { ElementSelector } from "./atoms/ElementSelector";
 import { $click, $drag } from "../utils/mouse";
 import { ShapeConfiguration } from "../types";
 import { MobileMessage } from "./atoms/MobileMessage";
+import { CircleHelp, Download, Eraser } from "lucide-react";
+import { InfoBox } from "./molecules/InfoBox";
 
 function App() {
   const realCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +39,21 @@ function App() {
   const drawingRef = useRef<Shape | null>(null);
   const layersRef = useRef<Shape[]>([]);
   const [selected, setSelected] = useState<Shape | null>(null);
+
+  const reset = useCallback(() => {
+    prevMouseMoveRef.current = null;
+
+    onMouseDownRef.current = null;
+    onMouseMoveRef.current = null;
+    onMouseUpRef.current = null;
+
+    drawingRef.current = null;
+    layersRef.current = [];
+
+    setMode("draw");
+    setActiveToolName(Pen.name);
+    setSelected(null);
+  }, []);
 
   const drawOnRealCanvas = useCallback(() => {
     draw(realCanvasRef, (ctx) => {
@@ -141,6 +158,15 @@ function App() {
       attach();
     }
   }, [selected, attach]);
+
+  const exportCanvas = useCallback(() => {
+    if (!realCanvasRef.current) return;
+
+    const a = document.createElement("a");
+    a.href = realCanvasRef.current.toDataURL() || "";
+    a.download = `WhiteMap - ${new Date().toISOString()}.png`;
+    a.click();
+  }, []);
 
   const updateConfig = useCallback(
     (config: ShapeConfiguration) => {
@@ -309,6 +335,10 @@ function App() {
     duplicateShape();
   });
 
+  useHotkeys("e", () => {
+    exportCanvas();
+  });
+
   return (
     <>
       <MobileMessage />
@@ -322,6 +352,33 @@ function App() {
         duplicateShape={duplicateShape}
         key={activeTool + (selected?.id || "-")}
       >
+        <PanelElement title="" show>
+          <ElementSelector
+            select={() => {
+              ///
+            }}
+            title="Help"
+          >
+            <InfoBox
+              Button={({ open }) => (
+                <CircleHelp
+                  size={18}
+                  strokeWidth={2}
+                  onClick={open}
+                  className="text-gray-500"
+                />
+              )}
+            />
+          </ElementSelector>
+
+          <ElementSelector select={exportCanvas} title="Export">
+            <Download size={18} strokeWidth={2} className="text-gray-500" />
+          </ElementSelector>
+
+          <ElementSelector select={reset} title="Clear Canvas">
+            <Eraser size={18} strokeWidth={2} className="text-gray-500" />
+          </ElementSelector>
+        </PanelElement>
         <PanelElement title="Tools" show>
           {Object.keys(Tools).map((tool) => {
             const isSelected = tool === activeToolName;
@@ -340,7 +397,7 @@ function App() {
                 title={tool}
               >
                 <Icon
-                  size={16}
+                  size={18}
                   strokeWidth={2}
                   fill={isSelected ? "#000" : "#FFF"}
                 />

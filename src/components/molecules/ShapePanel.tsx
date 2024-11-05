@@ -13,7 +13,6 @@ import { ColorSelector } from "../atoms/ColorSelector";
 import { PanelElement } from "../atoms/PanelElement";
 import { ElementSelector } from "../atoms/ElementSelector";
 import { Circle, Copy, Minus, Square, Trash } from "lucide-react";
-import { InfoBox } from "./InfoBox";
 import { Logo } from "../atoms/Logo";
 
 export interface ShapePanelProps extends PropsWithChildren {
@@ -103,8 +102,6 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
           <div>
             <Logo />
           </div>
-
-          <InfoBox />
         </div>
 
         {children}
@@ -112,11 +109,14 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         {!panel.noPanel && (
           <div className="flex flex-col gap-4">
             <PanelElement title="Background" show={panel.background}>
-              {BG_COLORS.map((color) => (
+              {BG_COLORS.map((color, index) => (
                 <ColorSelector
                   key={color}
                   color={color}
-                  select={() => setBackground(color)}
+                  select={() => {
+                    setBackground(color);
+                    setBorder(BORDER_COLORS[index]);
+                  }}
                   isSelected={background === color}
                 />
               ))}

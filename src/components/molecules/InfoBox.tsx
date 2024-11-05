@@ -4,6 +4,7 @@ import { CircleHelp, CircleX, Github, Linkedin } from "lucide-react";
 import { Logo } from "../atoms/Logo";
 
 const Shortcuts = {
+  Pointer: ["S"],
   "Pen Tool": ["P"],
   "Rectangle Tool": ["R"],
   "Oval Tool": ["O"],
@@ -12,6 +13,9 @@ const Shortcuts = {
   "Duplicate Element": ["D"],
   "Unselect Element": ["Esc"],
   "Delete Element": ["Del", "Backspace"],
+
+  "Export Canvas": ["E"],
+  "Clear Canvas": ["C"],
 };
 
 interface InfoBoxProps {
@@ -52,7 +56,7 @@ export const InfoBox: FC<InfoBoxProps> = ({ Button }) => {
           >
             <div className="top-0 z-50 sticky flex justify-between bg-white py-4">
               <h1 className="text-xl">
-                <Logo />
+                <Logo full />
               </h1>
 
               <CircleX onClick={close} />
@@ -76,7 +80,7 @@ export const InfoBox: FC<InfoBoxProps> = ({ Button }) => {
                   <a
                     href="https://github.com/Faisal-Manzer/iWar"
                     target="_blank"
-                    className="text-blue-700"
+                    className="text-blue-500"
                   >
                     iWar
                   </a>
@@ -90,7 +94,7 @@ export const InfoBox: FC<InfoBoxProps> = ({ Button }) => {
                     href="https://github.com/Faisal-Manzer/whitemap"
                     target="_blank"
                   >
-                    <div className="flex justify-center items-center bg-gray-200 p-1 rounded">
+                    <div className="flex justify-center items-center bg-gray-200 p-1 rounded text-gray-700">
                       <Github size={16} className="mr-2" />
                       GitHub
                     </div>
@@ -100,7 +104,7 @@ export const InfoBox: FC<InfoBoxProps> = ({ Button }) => {
                     href="https://www.linkedin.com/in/faisal-manzer"
                     target="_blank"
                   >
-                    <div className="flex justify-center items-center bg-gray-200 p-1 rounded">
+                    <div className="flex justify-center items-center bg-gray-200 p-1 rounded text-gray-700">
                       <Linkedin size={16} className="mr-2" />
                       Linkedin
                     </div>

@@ -1,5 +1,12 @@
-export const Logo = () => (
-  <span className="text-black">
+import { FC } from "react";
+
+interface LogoProps {
+  full?: boolean;
+}
+
+export const Logo: FC<LogoProps> = ({ full }) => (
+  <div className="text-black">
     White<span className="font-black">Map</span>
-  </span>
+    {full && <div className="opacity-40">Create Your Imagination</div>}
+  </div>
 );
