@@ -16,6 +16,7 @@ export interface EventModifier<T = Shape> {
   config: ShapeConfiguration;
   attach: () => void;
   attachShape: (shape: Shape) => void;
+  selectShape: (shape: Shape) => void;
 }
 
 export class Shape {
@@ -27,6 +28,8 @@ export class Shape {
 
   drawingOnly = false;
   config: ShapeConfiguration;
+
+  data: Map<string, string | number>;
 
   static name: string = "Shape";
   static icon = Shapes;
@@ -52,6 +55,7 @@ export class Shape {
     this.end = null;
     this.points = [];
     this.element = null;
+    this.data = new Map();
   }
 
   static onMouseDown({ shape, config }: EventModifier): void {

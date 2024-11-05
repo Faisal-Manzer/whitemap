@@ -6,11 +6,20 @@ import { $xy } from "../utils/coordinate";
 import { MouseEvent } from "react";
 import { isInsideBoundedRect } from "../utils/mouse";
 
+
 export class Text extends Shape {
   static name: string = "Text";
   static icon = CaseSensitive;
   static cursor: string = "text";
-  static panel: ShapePanelConfiguration = { ...Shape.panel };
+  static panel: ShapePanelConfiguration = { 
+    ...Shape.panel,
+
+    border: false,
+    background: false,
+
+    fontColor: true,
+    fontSize: true
+  };
 
   constructor(config: ShapeConfiguration) {
     super(config);
@@ -20,11 +29,18 @@ export class Text extends Shape {
     if (!this.start || !this.element) return this;
 
     if (!this.isEditing) {
-      ctx.font = "normal 48px serif";
-      ctx.fillStyle = "#FF0000";
+      this.configure(ctx);
+      ctx.fillStyle = this.config.fontColor;
+
+      ctx.font = `normal ${this.config.fontSize}px Lexend`;
   
       const rect = canvas.getBoundingClientRect();
-      ctx.fillText(this.element.innerHTML || "", this.start.x, this.start.y + (this.element.clientHeight) + rect.top - 11);
+      const x =  this.start.x;
+
+      const lines = this.element.innerHTML.split("\n");
+      const y = this.start.y + rect.top + this.element.clientHeight / 2 + 11;
+
+      ctx.fillText(lines[0], x, y);
     }
 
     return this;
@@ -32,6 +48,7 @@ export class Text extends Shape {
 
   static onClick({ shape, config, e, canvas, attach }: EventModifier<Text>) {
     if (shape.current || document.body !== document.activeElement) return;
+    console.log("text init")
 
     const text = new this(config);
     const rect = canvas.getBoundingClientRect();
@@ -51,9 +68,9 @@ export class Text extends Shape {
     element.style.top = (point.y + rect.top) + "px";
     element.style.left = (point.x + rect.left) + "px";
     
-    element.style.position = "fixed";
-    element.style.fontSize = "48px";
-    element.style.fontFamily = "serif";
+    element.style.position = "absolute";
+    element.style.fontSize = text.config.fontSize + "px";
+    element.style.fontFamily = "Lexend";
     element.style.fontWeight = "normal";
     element.style.zIndex = "10";
 
@@ -67,11 +84,11 @@ export class Text extends Shape {
     attach();
 
     element.onfocus = () => {
-      if (shape.current?.id === id) shape.current.select();
+      text.select();
     }
 
     element.onblur = () => {
-      if (shape.current?.id === id) shape.current.deselect();
+      text.deselect();
     }
   }
 

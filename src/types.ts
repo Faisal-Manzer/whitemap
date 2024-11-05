@@ -11,6 +11,9 @@ export interface ShapePanelConfiguration {
 
   background?: boolean;
   edge?: boolean;
+
+  fontColor?: boolean;
+  fontSize?: boolean;
 }
 
 export interface ShapeConfiguration {
@@ -19,6 +22,9 @@ export interface ShapeConfiguration {
 
   background: string;
   edge: "rounded" | "pointy";
+
+  fontColor: string;
+  fontSize: number;
 }
 
 export interface BondedRectangle {

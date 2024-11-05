@@ -18,8 +18,10 @@ export interface ShapePanelProps extends PropsWithChildren {
   shape: typeof Shape;
   selected: Shape | null;
   drawing: MutableRefObject<Shape | null>;
-  layers: MutableRefObject<Shape[]>;
-  attach: () => void;
+
+  deleteSelected: () => void;
+  duplicateShape: () => void;
+  updateConfig: (config: ShapeConfiguration) => void;
 }
 
 export interface ShapePanelRef {
@@ -46,9 +48,22 @@ const BACKGROUND_COLORS = [
 
 const BORDER_COLORS = ["#6b7280", "#3b82f6", "#22c55e", "#eab308", "#f43f5e"];
 
+const FONT_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
+
 type ShapeConstructor = typeof Shape | undefined | null;
 export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
-  ({ shape: s, drawing, layers, selected, attach, children }, ref) => {
+  (
+    {
+      shape: s,
+      drawing,
+      selected,
+      deleteSelected,
+      duplicateShape,
+      children,
+      updateConfig,
+    },
+    ref
+  ) => {
     const current = selected || drawing.current;
     const initialConfig = current?.config;
 
@@ -57,19 +72,33 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     const [background, setBackground] = useState<
       ShapeConfiguration["background"]
     >(initialConfig?.background || BACKGROUND_COLORS[0]);
+
     const [border, setBorder] = useState<ShapeConfiguration["border"]>(
       initialConfig?.border || BORDER_COLORS[0]
     );
+
     const [borderWidth, setBorderWidth] = useState<
       ShapeConfiguration["borderWidth"]
     >(initialConfig?.borderWidth || 1);
+
     const [edge, setEdge] = useState<ShapeConfiguration["edge"]>(
       initialConfig?.edge || "rounded"
     );
 
+    const [fontColor, setFontColor] = useState<ShapeConfiguration["fontColor"]>(
+      initialConfig?.fontColor || FONT_COLORS[0]
+    );
+
     const config: ShapeConfiguration = useMemo(
-      () => ({ border, background, borderWidth, edge }),
-      [border, background, borderWidth, edge]
+      () => ({
+        border,
+        background,
+        borderWidth,
+        edge,
+        fontColor,
+        fontSize: 24,
+      }),
+      [border, background, borderWidth, edge, fontColor]
     );
 
     useImperativeHandle(ref, () => ({
@@ -79,10 +108,8 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     }));
 
     useEffect(() => {
-      if (current) {
-        current.config = config;
-      }
-    }, [config, current]);
+      updateConfig(config);
+    }, [config, updateConfig]);
 
     const { panel } = shape as typeof Shape;
 
@@ -110,6 +137,17 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
                   color={color}
                   select={() => setBorder(color)}
                   isSelected={border === color}
+                />
+              ))}
+            </PanelElement>
+
+            <PanelElement title="Font Color" show={panel.fontColor}>
+              {FONT_COLORS.map((color) => (
+                <ColorSelector
+                  key={color}
+                  color={color}
+                  select={() => setFontColor(color)}
+                  isSelected={fontColor === color}
                 />
               ))}
             </PanelElement>
@@ -157,33 +195,11 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
               title="Actions"
               show={!!current && current.isSelected && current.isAttached}
             >
-              <ElementSelector
-                isSelected={false}
-                select={() => {
-                  layers.current = layers.current.filter(
-                    (s) => s.id !== current?.id
-                  );
-                  drawing.current = null;
-                }}
-              >
+              <ElementSelector isSelected={false} select={deleteSelected}>
                 <Trash strokeWidth={1.5} size={16} />
               </ElementSelector>
 
-              <ElementSelector
-                isSelected={false}
-                select={() => {
-                  if (current) {
-                    current.isSelected = false;
-                    layers.current = layers.current.map((s) => {
-                      s.isSelected = false;
-                      return s;
-                    });
-
-                    drawing.current = current.duplicate();
-                    attach();
-                  }
-                }}
-              >
+              <ElementSelector isSelected={false} select={duplicateShape}>
                 <Copy strokeWidth={1.5} size={16} />
               </ElementSelector>
             </PanelElement>

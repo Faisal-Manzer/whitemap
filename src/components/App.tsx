@@ -14,6 +14,7 @@ import { draw, drawBoundingBox, setup } from "../utils/drawing";
 import { PanelElement } from "./atoms/PanelElement";
 import { ElementSelector } from "./atoms/ElementSelector";
 import { $click, $drag } from "../utils/mouse";
+import { ShapeConfiguration } from "../types";
 
 function App() {
   const realCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,14 +62,18 @@ function App() {
     onMouseUpRef.current = null;
   }, []);
 
-  const selectShape = useCallback((shape: Shape, setTool = true) => {
-    shape.select();
-    drawingRef.current = shape;
+  const selectShape = useCallback(
+    (shape: Shape, setTool = true) => {
+      shape.select();
+      drawingRef.current = shape;
 
-    setMode("select");
-    setSelected(shape);
-    if (setTool) setActiveToolName(shape.constructor.name);
-  }, []);
+      setMode("select");
+      setSelected(shape);
+      resetMouse();
+      if (setTool) setActiveToolName(shape.constructor.name);
+    },
+    [resetMouse]
+  );
 
   const deselectAll = useCallback(() => {
     drawingRef.current = null;
@@ -97,7 +102,6 @@ function App() {
         layersRef.current.push(shape);
 
         selectShape(shape);
-        setMode("select");
       }
     },
     [selectShape]
@@ -109,6 +113,34 @@ function App() {
 
     drawingRef.current = null;
   }, [attachShape]);
+
+  const deleteSelected = useCallback(() => {
+    layersRef.current = layersRef.current.filter((s) => s.id !== selected?.id);
+
+    drawingRef.current = null;
+    deselectAll();
+  }, [deselectAll, selected]);
+
+  const duplicateShape = useCallback(() => {
+    if (drawingRef.current) {
+      drawingRef.current.isSelected = false;
+      layersRef.current = layersRef.current.map((s) => {
+        s.isSelected = false;
+        return s;
+      });
+
+      drawingRef.current = selected?.duplicate();
+      attach();
+    }
+  }, [selected, attach]);
+
+  const updateConfig = useCallback(
+    (config: ShapeConfiguration) => {
+      if (selected) selected.config = config;
+      if (drawingRef.current) drawingRef.current.config = config;
+    },
+    [selected]
+  );
 
   const runEvent = useCallback(
     (
@@ -129,16 +161,19 @@ function App() {
           config: panelRef.current.getConfig(),
           attach,
           attachShape,
+          selectShape,
         });
         // ref.current = null;
       }
     },
-    [activeTool, attach, attachShape]
+    [activeTool, attach, attachShape, selectShape]
   );
 
   const registerEvent =
     (ref: MutableRefObject<MouseEvent<HTMLCanvasElement> | null>) =>
     (e: MouseEvent<HTMLCanvasElement>) => {
+      e.stopPropagation();
+
       const canvas = realCanvasRef.current;
       if (!canvas) return;
 
@@ -166,6 +201,7 @@ function App() {
       );
 
       if ($click(mouse)) {
+        console.log("ci");
         const isSelectedClicked = hoveredElements.some(
           (s) =>
             onMouseUpRef.current &&
@@ -175,6 +211,7 @@ function App() {
 
         const wasSelected = !!selected;
         deselectAll();
+
         if (hoveredElements.length > 0) {
           selectShape(hoveredElements[hoveredElements.length - 1]);
           if (isSelectedClicked) selected?.edit();
@@ -236,8 +273,9 @@ function App() {
         shape={activeTool as unknown as typeof Shape}
         selected={selected}
         drawing={drawingRef}
-        layers={layersRef}
-        attach={attach}
+        updateConfig={updateConfig}
+        deleteSelected={deleteSelected}
+        duplicateShape={duplicateShape}
         key={activeTool + (selected?.id || "-")}
       >
         <PanelElement title="Tools" show>
@@ -258,7 +296,7 @@ function App() {
               >
                 <Icon
                   size={16}
-                  strokeWidth={3}
+                  strokeWidth={2}
                   fill={isSelected ? "#000" : "#FFF"}
                 />
               </ElementSelector>
@@ -269,7 +307,7 @@ function App() {
 
       <canvas
         ref={realCanvasRef}
-        className="top-0 left-0 z-0 fixed m-0 p-0 w-screen h-screen"
+        className="top-0 left-0 z-5 fixed bg-transparent m-0 p-0 w-screen h-screen"
         onMouseDown={registerEvent(onMouseDownRef)}
         onMouseMove={(e) => {
           prevMouseMoveRef.current = onMouseMoveRef.current;
