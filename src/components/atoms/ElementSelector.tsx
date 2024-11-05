@@ -6,6 +6,7 @@ interface ElementSelectorProps extends PropsWithChildren {
   select: () => void;
 
   selectedClass?: string;
+  title?: string;
 }
 
 export const ElementSelector: FC<ElementSelectorProps> = ({
@@ -13,11 +14,13 @@ export const ElementSelector: FC<ElementSelectorProps> = ({
   select,
   selectedClass = "bg-gray-200",
   children,
+  title,
 }) => (
   <div
+    title={title}
     className={cn(
       "p-0.5 border-2 rounded-lg border-white",
-      isSelected && selectedClass,
+      isSelected && selectedClass
     )}
   >
     <div

@@ -13,6 +13,8 @@ import { ColorSelector } from "../atoms/ColorSelector";
 import { PanelElement } from "../atoms/PanelElement";
 import { ElementSelector } from "../atoms/ElementSelector";
 import { Circle, Copy, Minus, Square, Trash } from "lucide-react";
+import { InfoBox } from "./InfoBox";
+import { Logo } from "../atoms/Logo";
 
 export interface ShapePanelProps extends PropsWithChildren {
   shape: typeof Shape;
@@ -28,26 +30,8 @@ export interface ShapePanelRef {
   getConfig: () => ShapeConfiguration;
 }
 
-// const BACKGROUND_COLORS = [
-// "#d1d5db",
-// "#93c5fd",
-// "#86efac",
-// "#fde047",
-// "#fca5a5",
-// ];
-
-// const BORDER_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
-
-const BACKGROUND_COLORS = [
-  "#f3f4f6",
-  "#dbeafe",
-  "#dcfce7",
-  "#fef9c3",
-  "#ffe4e6",
-];
-
+const BG_COLORS = ["#f3f4f6", "#dbeafe", "#dcfce7", "#fef9c3", "#ffe4e6"];
 const BORDER_COLORS = ["#6b7280", "#3b82f6", "#22c55e", "#eab308", "#f43f5e"];
-
 const FONT_COLORS = ["#374151", "#1d4ed8", "#15803d", "#a16207", "#b91c1c"];
 
 type ShapeConstructor = typeof Shape | undefined | null;
@@ -62,7 +46,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
       children,
       updateConfig,
     },
-    ref,
+    ref
   ) => {
     const current = selected || drawing.current;
     const initialConfig = current?.config;
@@ -71,10 +55,10 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
 
     const [background, setBackground] = useState<
       ShapeConfiguration["background"]
-    >(initialConfig?.background || BACKGROUND_COLORS[0]);
+    >(initialConfig?.background || BG_COLORS[0]);
 
     const [border, setBorder] = useState<ShapeConfiguration["border"]>(
-      initialConfig?.border || BORDER_COLORS[0],
+      initialConfig?.border || BORDER_COLORS[0]
     );
 
     const [borderWidth, setBorderWidth] = useState<
@@ -82,11 +66,11 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     >(initialConfig?.borderWidth || 1);
 
     const [edge, setEdge] = useState<ShapeConfiguration["edge"]>(
-      initialConfig?.edge || "rounded",
+      initialConfig?.edge || "rounded"
     );
 
     const [fontColor, setFontColor] = useState<ShapeConfiguration["fontColor"]>(
-      initialConfig?.fontColor || FONT_COLORS[0],
+      initialConfig?.fontColor || FONT_COLORS[0]
     );
 
     const config: ShapeConfiguration = useMemo(
@@ -98,7 +82,7 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         fontColor,
         fontSize: 24,
       }),
-      [border, background, borderWidth, edge, fontColor],
+      [border, background, borderWidth, edge, fontColor]
     );
 
     useImperativeHandle(ref, () => ({
@@ -114,13 +98,21 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
     const { panel } = shape as typeof Shape;
 
     return (
-      <div className="top-36 left-4 z-20 fixed border-gray-100 bg-white shadow-lg p-4 border rounded-lg">
+      <div className="top-4 right-4 z-20 fixed md:flex flex-col gap-4 border-gray-100 hidden bg-white shadow-lg p-4 border rounded-lg">
+        <div className="flex flex-row justify-between items-center">
+          <div>
+            <Logo />
+          </div>
+
+          <InfoBox />
+        </div>
+
         {children}
 
         {!panel.noPanel && (
-          <div className="flex flex-col gap-4 mt-4">
+          <div className="flex flex-col gap-4">
             <PanelElement title="Background" show={panel.background}>
-              {BACKGROUND_COLORS.map((color) => (
+              {BG_COLORS.map((color) => (
                 <ColorSelector
                   key={color}
                   color={color}
@@ -207,5 +199,5 @@ export const ShapePanel = forwardRef<ShapePanelRef, ShapePanelProps>(
         )}
       </div>
     );
-  },
+  }
 );

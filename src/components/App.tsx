@@ -16,6 +16,7 @@ import { PanelElement } from "./atoms/PanelElement";
 import { ElementSelector } from "./atoms/ElementSelector";
 import { $click, $drag } from "../utils/mouse";
 import { ShapeConfiguration } from "../types";
+import { MobileMessage } from "./atoms/MobileMessage";
 
 function App() {
   const realCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,7 +24,7 @@ function App() {
 
   const [mode, setMode] = useState<"draw" | "select">("draw");
   const [activeToolName, setActiveToolName] = useState<keyof typeof Tools>(
-    Pen.name,
+    Pen.name
   );
   const activeTool = Tools[activeToolName];
 
@@ -73,7 +74,7 @@ function App() {
       resetMouse();
       if (setTool) setActiveToolName(shape.constructor.name);
     },
-    [resetMouse],
+    [resetMouse]
   );
 
   const deselectAll = useCallback(() => {
@@ -105,7 +106,7 @@ function App() {
         selectShape(shape);
       }
     },
-    [selectShape],
+    [selectShape]
   );
 
   const attach = useCallback(() => {
@@ -146,18 +147,16 @@ function App() {
       if (selected) selected.config = config;
       if (drawingRef.current) drawingRef.current.config = config;
     },
-    [selected],
+    [selected]
   );
 
   const runEvent = useCallback(
     (
       name: "onMouseUp" | "onMouseMove" | "onMouseDown" | "onClick",
-      ref: MutableRefObject<
-        MouseEvent<
-          HTMLCanvasElement,
-          globalThis.MouseEvent
-        > | null
-      >,
+      ref: MutableRefObject<MouseEvent<
+        HTMLCanvasElement,
+        globalThis.MouseEvent
+      > | null>
     ) => {
       const canvas = realCanvasRef.current;
       if (!panelRef.current || !canvas) return;
@@ -175,7 +174,7 @@ function App() {
         // ref.current = null;
       }
     },
-    [activeTool, attach, attachShape, selectShape],
+    [activeTool, attach, attachShape, selectShape]
   );
 
   const registerEvent =
@@ -213,7 +212,7 @@ function App() {
           (s) =>
             onMouseUpRef.current &&
             s.id === selected?.id &&
-            s.isHovered(onMouseUpRef.current),
+            s.isHovered(onMouseUpRef.current)
         );
 
         const wasSelected = !!selected;
@@ -312,6 +311,7 @@ function App() {
 
   return (
     <>
+      <MobileMessage />
       <ShapePanel
         ref={panelRef}
         shape={activeTool as unknown as typeof Shape}
@@ -337,6 +337,7 @@ function App() {
                   deselectAll();
                   setActiveToolName(tool);
                 }}
+                title={tool}
               >
                 <Icon
                   size={16}
